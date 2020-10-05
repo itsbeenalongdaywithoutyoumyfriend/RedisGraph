@@ -11,7 +11,6 @@
 #include "../query_ctx.h"
 #include "../util/qsort.h"
 #include "../util/strcmp.h"
-#include "../util/vector.h"
 #include "../util/rmalloc.h"
 #include "../util/rax_extensions.h"
 #include "../graph/entities/edge.h"
@@ -405,17 +404,16 @@ void ExecutionPlan_RePositionFilterOp(ExecutionPlan *plan, OpBase *lower_bound,
 }
 
 void ExecutionPlan_PlaceFilterOps(ExecutionPlan *plan, const OpBase *recurse_limit) {
-	Vector *sub_trees = FilterTree_SubTrees(plan->filter_tree);
+	FT_FilterNode **sub_trees = FilterTree_SubTrees(plan->filter_tree);
 
 	/* For each filter tree find the earliest position along the execution
 	 * after which the filter tree can be applied. */
-	for(int i = 0; i < Vector_Size(sub_trees); i++) {
-		FT_FilterNode *tree;
-		Vector_Get(sub_trees, i, &tree);
+	for(int i = 0; i < array_len(sub_trees); i++) {
+		FT_FilterNode *tree = sub_trees[i];
 		OpBase *filter_op = NewFilterOp(plan, tree);
 		ExecutionPlan_RePositionFilterOp(plan, plan->root, recurse_limit, filter_op);
 	}
-	Vector_Free(sub_trees);
+	array_free(sub_trees);
 	_ExecutionPlan_PlaceApplyOps(plan);
 }
 

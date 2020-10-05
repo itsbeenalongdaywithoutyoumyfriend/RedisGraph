@@ -94,26 +94,26 @@ FT_FilterNode *FilterTree_CreateConditionFilter(AST_Operator op) {
 	return filterNode;
 }
 
-void _FilterTree_SubTrees(const FT_FilterNode *root, Vector *sub_trees) {
+void _FilterTree_SubTrees(FT_FilterNode *root, FT_FilterNode ***sub_trees) {
 	if(root == NULL) return;
 
 	switch(root->t) {
 	case FT_N_EXP:
 	case FT_N_PRED:
-		/* This is a simple predicate tree, can not traverse further. */
-		Vector_Push(sub_trees, root);
+		// This is a simple predicate tree, can not traverse further.
+		*sub_trees = array_append(*sub_trees, root);
 		break;
 	case FT_N_COND:
 		switch(root->cond.op) {
 		case OP_AND:
-			/* Break AND down to its components. */
+			// Break AND down to its components.
 			_FilterTree_SubTrees(root->cond.left, sub_trees);
 			_FilterTree_SubTrees(root->cond.right, sub_trees);
 			rm_free((FT_FilterNode *)root);
 			break;
 		case OP_OR:
-			/* OR tree must be return as is. */
-			Vector_Push(sub_trees, root);
+			// OR tree must be return as is.
+			*sub_trees = array_append(*sub_trees, root);
 			break;
 		default:
 			assert(0);
@@ -125,9 +125,9 @@ void _FilterTree_SubTrees(const FT_FilterNode *root, Vector *sub_trees) {
 	}
 }
 
-Vector *FilterTree_SubTrees(const FT_FilterNode *root) {
-	Vector *sub_trees = NewVector(FT_FilterNode *, 1);
-	_FilterTree_SubTrees(root, sub_trees);
+FT_FilterNode **FilterTree_SubTrees(FT_FilterNode *root) {
+	FT_FilterNode **sub_trees = array_new(FT_FilterNode*, 1);
+	_FilterTree_SubTrees(root, &sub_trees);
 	return sub_trees;
 }
 

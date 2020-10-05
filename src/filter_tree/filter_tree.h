@@ -6,10 +6,9 @@
 
 #pragma once
 
-#include "../redismodule.h"
-#include "../util/vector.h"
-#include "../ast/ast_shared.h"
 #include "rax.h"
+#include "../redismodule.h"
+#include "../ast/ast_shared.h"
 #include "../execution_plan/record.h"
 #include "../arithmetic/arithmetic_expression.h"
 
@@ -109,7 +108,7 @@ void FilterTree_Print(const FT_FilterNode *root);
  * sub trees under an OR operator are returned,
  * sub trees under an AND operator are broken down to the smallest
  * components possible following the two rules above. */
-Vector *FilterTree_SubTrees(const FT_FilterNode *root);
+FT_FilterNode **FilterTree_SubTrees(FT_FilterNode *root);
 
 /* Verifies tree structure
  * a condition or predicate node can't be childless. */
