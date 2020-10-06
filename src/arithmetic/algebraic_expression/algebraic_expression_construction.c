@@ -420,7 +420,7 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 	}
 
 	if(e->dest->customized_filter!=GrB_NULL){
-		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, true, e->dest->alias, e->dest->alias, NULL, e->dest->label));
+		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, false, e->dest->alias, e->dest->alias, NULL, e->dest->label));
 	}
 
 	return root;
@@ -674,7 +674,7 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 				QGEdge **path=paths[0];
 				QGEdge *e =path[0];
 				if(e->src->customized_filter!=GrB_NULL){
-					exp = _AlgebraicExpression_MultiplyToTheLeft(AlgebraicExpression_NewOperand(e->src->customized_filter, true, e->src->alias, e->src->alias, NULL, e->src->label),exp);
+					exp = _AlgebraicExpression_MultiplyToTheLeft(AlgebraicExpression_NewOperand(e->src->customized_filter, false, e->src->alias, e->src->alias, NULL, e->src->label),exp);
 				}
 			}
 			/* Remove exp[i] src label matrix (left most operand) as it's
