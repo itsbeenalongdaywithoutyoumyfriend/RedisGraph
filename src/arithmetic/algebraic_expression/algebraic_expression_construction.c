@@ -419,12 +419,149 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 		root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNode(e->dest));
 	}
 
+	if(e->dest->customized_filter!=GrB_NULL){
+		
+	}
+
 	return root;
 }
 
 //------------------------------------------------------------------------------
 // AlgebraicExpression construction.
 //------------------------------------------------------------------------------
+
+static AlgebraicExpression *_AlgebraicExpression_FromPath_mql
+(
+	QGEdge **path,
+	bool *transpositions
+) {
+	assert(path);
+
+	QGEdge *e = NULL;
+	uint path_len = array_len(path);
+	assert(path_len > 0);
+	AlgebraicExpression *root = NULL;
+
+	/* Treating path as a chain
+	 * we're aligning all edges to "point right"
+	 * (A)-[E0]->(B)-[E0]->(C)-[E0]->(D).
+	 * e.g.
+	 * (A)-[E0]->(B)<-[E1]-(C)-[E2]->(D)
+	 * E1 will be transposed:
+	 * (A)-[E0]->(B)-[E1]->(C)-[E2]->(D) */
+
+	// Construct expression.
+	for(int i = 0; i < path_len; i++) {
+		e = path[i];
+		// Add Edge matrix.
+		AlgebraicExpression *op = _AlgebraicExpression_OperandFromEdge(e, transpositions[i]);
+
+		if(!root) {
+			root = op;
+		} else {
+			// Connect via a multiplication node.
+			root = _AlgebraicExpression_MultiplyToTheRight(root, op);
+		}
+				// If last node on path has a label, multiply by label matrix.
+		if(e->dest->label) {
+			root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNode(e->dest));
+		}
+	}   // End of path traversal.
+	e=path[0];
+	if(e->src->label) {
+		root = _AlgebraicExpression_MultiplyToTheLeft(_AlgebraicExpression_OperandFromNode(e->src),root);
+	}
+	return root;
+}
+
+
+NodeID * get_filter_mql
+(
+	QGEdge **path,
+	bool *transpositions,
+	bool src_or_dest // src 1 dest 0
+)
+{
+	GraphContext *gc = QueryCtx_GetGraphCtx();
+	AlgebraicExpression *exp=_AlgebraicExpression_FromPath_mql(path,transpositions);
+	GrB_Matrix res= GrB_NULL;
+	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
+	NodeID *filters = array_new(NodeID,required_dim);
+	GrB_Matrix_new(&res, GrB_BOOL, required_dim, required_dim);
+	AlgebraicExpression_Optimize(&exp);
+	AlgebraicExpression_Eval(exp, res);
+	GxB_MatrixTupleIter *iter=NULL;
+	GxB_MatrixTupleIter_new(&iter, res);
+	NodeID src_id = INVALID_ENTITY_ID;
+	NodeID dest_id = INVALID_ENTITY_ID;
+	bool depleted = false;
+	while(true)
+	{
+		if(iter) GxB_MatrixTupleIter_next(iter, &src_id, &dest_id, &depleted);
+		if(depleted) break;
+		if(src_or_dest)filters= array_append(filters,src_id);
+		else filters= array_append(filters,dest_id);
+	}
+	return filters;
+}
+
+
+void customized_filter_mql
+(
+	QGEdge **path,
+	bool *transpositions,
+	const QueryGraph *qg
+){
+	GraphContext *gc = QueryCtx_GetGraphCtx();
+	QGEdge *e = NULL;
+	int pathLen = array_len(path);
+	/* Scan path left to right,
+	 * construct intermidate paths by "breaking" on referenced entities. */
+	for(int i = 0; i < pathLen - 1; i++) {
+		// e = path[i];
+		// intermediate_path = array_append(intermediate_path, e);
+		if(_should_divide_expression(path, i, qg)) {
+			// Break! add current path to paths and create a new path.
+			// intermediate_path = array_new(QGEdge *, pathLen);
+			// paths = array_append(paths, intermediate_path);
+			QGEdge **path1 = array_new(QGEdge *, pathLen);
+			QGEdge **path2 = array_new(QGEdge *, pathLen);
+			for(int j=0;j<=i;++j)
+			{
+				e=path[j];
+				path1=array_append(path1, e);
+			}
+			for(int j=i+1;j<pathLen;++j)
+			{
+				e=path[j];
+				path2=array_append(path2, e);
+			}
+			NodeID *filters1 = get_filter_mql(path1,transpositions,0);
+			// AlgebraicExpression *exp1=_AlgebraicExpression_FromPath_mql(path1,transpositions);
+			uint edge_converted = array_len(path1);
+			// AlgebraicExpression *exp2=_AlgebraicExpression_FromPath_mql(path2,transpositions + edge_converted);
+			NodeID *filters2 = get_filter_mql(path2,transpositions + edge_converted,1);
+			uint filters1_len=array_len(filters1);
+			uint filters2_len=array_len(filters2);
+			size_t required_dim = Graph_RequiredMatrixDim(gc->g);
+			GrB_Matrix_new(&e->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
+			int outcount=0;
+			for(uint i=0,j=0;i<filters1_len;++i)
+			{
+				for(;j<filters2_len&&filters2[j]<filters1[i];++j);
+				if(j<filters2_len&&filters2[j]==filters1[i])	
+				{
+					GrB_Matrix_setElement_BOOL(e->dest->customized_filter,1,filters1[i],filters1[i]);
+					++outcount;
+				}
+			}
+			FILE *fp;
+			fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","w");
+			fprintf(fp,"%s %d\n",e->dest->alias,outcount);
+			fclose(fp);
+		}
+	}
+}
 
 // Construct algebraic expression form query graph.
 AlgebraicExpression **AlgebraicExpression_FromQueryGraph
@@ -477,6 +614,8 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 		// Split path into sub paths.
 		bool transpositions[path_len];
 		_normalizePath(path, path_len, transpositions);
+
+		customized_filter_mql(path,transpositions,qg);
 
 		QGEdge ***paths = _Intermediate_Paths(path, qg);
 		AlgebraicExpression **sub_exps = array_new(AlgebraicExpression *, 1);
