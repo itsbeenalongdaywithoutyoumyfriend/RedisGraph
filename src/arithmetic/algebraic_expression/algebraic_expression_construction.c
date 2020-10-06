@@ -420,7 +420,7 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 	}
 
 	if(e->dest->customized_filter!=GrB_NULL){
-		
+		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, true, e->dest->alias, e->dest->alias, NULL, e->dest->label););
 	}
 
 	return root;
@@ -667,6 +667,14 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 			edge_converted += array_len(paths[i]);
 			sub_exps = array_append(sub_exps, exp);
 
+			if(i ==0 )
+			{
+				QGEdge **path=paths[0];
+				QGEdge *e =path[0];
+				if(e->src->customized_filter!=GrB_NULL){
+					exp = _AlgebraicExpression_MultiplyToTheLeft(AlgebraicExpression_NewOperand(e->src->customized_filter, true, e->src->alias, e->src->alias, NULL, e->src->label),exp);
+				}
+			}
 			/* Remove exp[i] src label matrix (left most operand) as it's
 			 * being used by exp[i-1] dest label matrix.
 			 * (:A)-[:X]->(:B)-[:Y]->(:C)
