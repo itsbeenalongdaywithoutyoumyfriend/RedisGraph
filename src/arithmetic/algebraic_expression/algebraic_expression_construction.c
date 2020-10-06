@@ -583,15 +583,14 @@ void customized_filter_mql
 	}
 	FILE *fp;
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
-	fprintf(fp,"%s %d\n",path[0]->src->alias,outcount);
+	fprintf(fp,"%s %d src\n",path[0]->src->alias,outcount);
 	outcount=0;
 	for(uint i=0;i<dest_filters_len;++i)
 	{
 		GrB_Matrix_setElement_BOOL(path[pathLen-1]->dest->customized_filter,1,dest_filter[i],dest_filter[i]);
 		++outcount;
 	}
-	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
-	fprintf(fp,"%s %d\n",path[pathLen-1]->dest->alias,outcount);
+	fprintf(fp,"%s %d dest\n",path[pathLen-1]->dest->alias,outcount);
 	fclose(fp);
 }
 
