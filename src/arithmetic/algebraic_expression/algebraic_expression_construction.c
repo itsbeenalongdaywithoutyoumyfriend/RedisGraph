@@ -558,9 +558,10 @@ void customized_filter_mql
 				for(;j<filters2_len&&filters2[j]<filters1[i];++j);
 				if(j<filters2_len&&filters2[j]==filters1[i])	
 				{
-					bool *testx;
-					GrB_Matrix_extractElement_BOOL(testx,e->dest->customized_filter,filters1[i],filters1[i]);
-					if(*testx==0)++outcount;
+					// bool *testx;
+					// GrB_Matrix_extractElement_BOOL(testx,e->dest->customized_filter,filters1[i],filters1[i]);
+					// if(*testx==0)
+					++outcount;
 					GrB_Matrix_setElement_BOOL(e->dest->customized_filter,1,filters1[i],filters1[i]);
 					// ++outcount;
 				}
@@ -581,11 +582,11 @@ void customized_filter_mql
 	int outcount=0;
 	for(uint i=0;i<src_filters_len;++i)
 	{
-		bool *testx;
-		GrB_Matrix_extractElement_BOOL(testx,path[0]->src->customized_filter,src_filter[i],src_filter[i]);
-		if(*testx==0)++outcount;
+		// bool *testx;
+		// GrB_Matrix_extractElement_BOOL(testx,path[0]->src->customized_filter,src_filter[i],src_filter[i]);
+		// if(*testx==0)
+		++outcount;
 		GrB_Matrix_setElement_BOOL(path[0]->src->customized_filter,1,src_filter[i],src_filter[i]);
-		// ++outcount;
 	}
 	FILE *fp;
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
@@ -593,9 +594,10 @@ void customized_filter_mql
 	outcount=0;
 	for(uint i=0;i<dest_filters_len;++i)
 	{
-		bool *testx;
-		GrB_Matrix_extractElement_BOOL(testx,path[pathLen-1]->dest->customized_filter,dest_filter[i],dest_filter[i]);
-		if(*testx==0)++outcount;
+		// bool *testx;
+		// GrB_Matrix_extractElement_BOOL(testx,path[pathLen-1]->dest->customized_filter,dest_filter[i],dest_filter[i]);
+		// if(*testx==0)
+		++outcount;
 		GrB_Matrix_setElement_BOOL(path[pathLen-1]->dest->customized_filter,1,dest_filter[i],dest_filter[i]);
 	}
 	fprintf(fp,"%s %d dest\n",path[pathLen-1]->dest->alias,outcount);
