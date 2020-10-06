@@ -495,7 +495,7 @@ NodeID * get_filter_mql
 	}
 	else
 	{
-		assert(exp->type == AL_OPERAND)
+		assert(exp->type == AL_OPERAND);
 		res = exp->operand.matrix;
 	}
 	
