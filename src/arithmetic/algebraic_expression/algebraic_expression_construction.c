@@ -489,7 +489,16 @@ NodeID * get_filter_mql
 	NodeID *filters = array_new(NodeID,required_dim);
 	GrB_Matrix_new(&res, GrB_BOOL, required_dim, required_dim);
 	AlgebraicExpression_Optimize(&exp);
-	AlgebraicExpression_Eval(exp, res);
+	assert(exp);
+	if(exp->type == AL_OPERATION){
+		AlgebraicExpression_Eval(exp, res);
+	}
+	else
+	{
+		assert(exp->type == AL_OPERAND)
+		res = exp->operand.matrix;
+	}
+	
 	GxB_MatrixTupleIter *iter=NULL;
 	GxB_MatrixTupleIter_new(&iter, res);
 	NodeID src_id = INVALID_ENTITY_ID;
@@ -537,9 +546,7 @@ void customized_filter_mql
 				path2=array_append(path2, e);
 			}
 			NodeID *filters1 = get_filter_mql(path1,transpositions,0);
-			// AlgebraicExpression *exp1=_AlgebraicExpression_FromPath_mql(path1,transpositions);
 			uint edge_converted = array_len(path1);
-			// AlgebraicExpression *exp2=_AlgebraicExpression_FromPath_mql(path2,transpositions + edge_converted);
 			NodeID *filters2 = get_filter_mql(path2,transpositions + edge_converted,1);
 			uint filters1_len=array_len(filters1);
 			uint filters2_len=array_len(filters2);
@@ -556,11 +563,36 @@ void customized_filter_mql
 				}
 			}
 			FILE *fp;
-			fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","w");
+			fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
 			fprintf(fp,"%s %d\n",e->dest->alias,outcount);
 			fclose(fp);
 		}
 	}
+	NodeID *src_filter=get_filter_mql(path,transpositions,1);
+	NodeID *dest_filter=get_filter_mql(path,transpositions,0);
+	uint src_filters_len=array_len(src_filter);
+	uint dest_filters_len=array_len(dest_filter);
+	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
+	GrB_Matrix_new(&path[0]->src->customized_filter, GrB_BOOL, required_dim, required_dim);
+	GrB_Matrix_new(&path[pathLen-1]->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
+	int outcount=0;
+	for(uint i=0;i<src_filters_len;++i)
+	{
+		GrB_Matrix_setElement_BOOL(path[0]->src->customized_filter,1,src_filter[i],src_filter[i]);
+		++outcount;
+	}
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	fprintf(fp,"%s %d\n",path[0]->src->alias,outcount);
+	outcount=0;
+	for(uint i=0;i<dest_filters_len;++i)
+	{
+		GrB_Matrix_setElement_BOOL(path[pathLen-1]->dest->customized_filter,1,dest_filter[i],dest_filter[i]);
+		++outcount;
+	}
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	fprintf(fp,"%s %d\n",path[pathLen-1]->dest->alias,outcount);
+	fclose(fp);
 }
 
 // Construct algebraic expression form query graph.
