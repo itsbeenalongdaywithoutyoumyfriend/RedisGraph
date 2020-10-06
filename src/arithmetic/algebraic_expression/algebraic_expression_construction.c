@@ -420,7 +420,7 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 	}
 
 	if(e->dest->customized_filter!=GrB_NULL){
-		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, true, e->dest->alias, e->dest->alias, NULL, e->dest->label););
+		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, true, e->dest->alias, e->dest->alias, NULL, e->dest->label));
 	}
 
 	return root;
