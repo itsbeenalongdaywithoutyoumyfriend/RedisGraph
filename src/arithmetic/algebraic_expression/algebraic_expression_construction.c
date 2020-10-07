@@ -426,8 +426,8 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 	GrB_Matrix res= GrB_NULL;
 	GrB_Matrix_new(&res, GrB_BOOL, required_dim, required_dim);
-	AlgebraicExpression_Optimize(&exp);
-	AlgebraicExpression_Eval(exp, res);
+	AlgebraicExpression_Optimize(&root);
+	AlgebraicExpression_Eval(root, res);
 	GrB_Index nvals;
 	GrB_Matrix_nvals(&nvals, res);
 	
