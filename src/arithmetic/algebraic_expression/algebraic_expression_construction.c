@@ -422,6 +422,8 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 	if((e->dest->customized_filter)!=GrB_NULL){
 		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, true, e->dest->alias, e->dest->alias, NULL, e->dest->label));
 	}
+	GraphContext *gc = QueryCtx_GetGraphCtx();
+	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 	GrB_Matrix res= GrB_NULL;
 	GrB_Matrix_new(&res, GrB_BOOL, required_dim, required_dim);
 	AlgebraicExpression_Optimize(&exp);
