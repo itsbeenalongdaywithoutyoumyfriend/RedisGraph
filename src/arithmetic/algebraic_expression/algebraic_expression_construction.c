@@ -422,7 +422,17 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 	if((e->dest->customized_filter)!=GrB_NULL){
 		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, true, e->dest->alias, e->dest->alias, NULL, e->dest->label));
 	}
-
+	GrB_Matrix res= GrB_NULL;
+	GrB_Matrix_new(&res, GrB_BOOL, required_dim, required_dim);
+	AlgebraicExpression_Optimize(&exp);
+	AlgebraicExpression_Eval(exp, res);
+	GrB_Index nvals;
+	GrB_Matrix_nvals(&nvals, res);
+	
+	assert(nvals>0);
+	++nvals;
+	assert(nvals>0);
+	
 	return root;
 }
 
