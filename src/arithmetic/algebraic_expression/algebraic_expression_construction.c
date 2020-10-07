@@ -542,6 +542,7 @@ void customized_filter_mql
 				e=path[j];
 				path2=array_append(path2, e);
 			}
+			e = path[i];
 			NodeID *filters1 = get_filter_mql(path1,transpositions,0);
 			uint edge_converted = array_len(path1);
 			NodeID *filters2 = get_filter_mql(path2,transpositions + edge_converted,1);
