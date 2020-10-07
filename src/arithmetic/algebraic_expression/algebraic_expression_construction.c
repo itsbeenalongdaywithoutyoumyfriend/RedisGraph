@@ -520,6 +520,7 @@ void customized_filter_mql
 ){
 	GraphContext *gc = QueryCtx_GetGraphCtx();
 	QGEdge *e = NULL;
+	GrB_Index nvals;
 	int pathLen = array_len(path);
 	/* Scan path left to right,
 	 * construct intermidate paths by "breaking" on referenced entities. */
@@ -567,6 +568,8 @@ void customized_filter_mql
 			FILE *fp;
 			fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
 			fprintf(fp,"%s %d\n",e->dest->alias,outcount);
+			GrB_Matrix_nvals(&nvals, e->dest->customized_filter);
+			fprintf(fp,"%s %llu\n",e->dest->alias,nvals);
 			fclose(fp);
 		}
 	}
@@ -589,6 +592,8 @@ void customized_filter_mql
 	FILE *fp;
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
 	fprintf(fp,"%s %d src\n",path[0]->src->alias,outcount);
+	GrB_Matrix_nvals(&nvals, path[0]->src->customized_filter);
+	fprintf(fp,"%s %llu src\n",path[0]->src->alias,nvals);
 	outcount=0;
 	for(uint i=0;i<dest_filters_len;++i)
 	{
@@ -599,6 +604,8 @@ void customized_filter_mql
 		GrB_Matrix_setElement_BOOL(path[pathLen-1]->dest->customized_filter,1,dest_filter[i],dest_filter[i]);
 	}
 	fprintf(fp,"%s %d dest\n",path[pathLen-1]->dest->alias,outcount);
+	GrB_Matrix_nvals(&nvals, path[pathLen-1]->dest->customized_filter);
+	fprintf(fp,"%s %llu dest\n",path[pathLen-1]->dest->alias,nvals);
 	fclose(fp);
 }
 
