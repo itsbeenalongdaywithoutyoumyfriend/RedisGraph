@@ -419,7 +419,7 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 		root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNode(e->dest));
 	}
 
-	if(e->dest->customized_filter!=GrB_NULL){
+	if((e->dest->customized_filter)!=GrB_NULL){
 		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, true, e->dest->alias, e->dest->alias, NULL, e->dest->label));
 	}
 
@@ -462,14 +462,11 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath_mql
 			// Connect via a multiplication node.
 			root = _AlgebraicExpression_MultiplyToTheRight(root, op);
 		}
-				// If last node on path has a label, multiply by label matrix.
-		if(e->dest->label) {
-			root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNode(e->dest));
-		}
 	}   // End of path traversal.
-	e=path[0];
-	if(e->src->label) {
-		root = _AlgebraicExpression_MultiplyToTheLeft(_AlgebraicExpression_OperandFromNode(e->src),root);
+
+	// If last node on path has a label, multiply by label matrix.
+	if(e->dest->label) {
+		root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNode(e->dest));
 	}
 	return root;
 }
