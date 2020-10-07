@@ -419,9 +419,9 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 		root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNode(e->dest));
 	}
 
-	// if((e->dest->customized_filter)!=GrB_NULL){
-	// 	root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, true, e->dest->alias, e->dest->alias, NULL, e->dest->label));
-	// }
+	if((e->dest->customized_filter)!=GrB_NULL){
+		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, true, e->dest->alias, e->dest->alias, NULL, e->dest->label));
+	}
 	GraphContext *gc = QueryCtx_GetGraphCtx();
 	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 	GrB_Matrix res= GrB_NULL;
