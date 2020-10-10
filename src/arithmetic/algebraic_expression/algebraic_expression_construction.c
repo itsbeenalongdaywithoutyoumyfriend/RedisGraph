@@ -578,19 +578,18 @@ void customized_filter_mql
 			GrB_Matrix_new(&e->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
 			int outcount=0;
 			
-			for(uint i=0,j=0;i<filters1_len;++i)
+			for(uint i=0;i<filters1_len;++i)
 			{
-				for(;j<filters2_len&&filters2[j]<filters1[i];++j);
-				if(j<filters2_len&&filters2[j]==filters1[i])	
+				for(uint j=0;j<filters2_len;++j)
 				{
-					// bool *testx;
-					// GrB_Matrix_extractElement_BOOL(testx,e->dest->customized_filter,filters1[i],filters1[i]);
-					// if(*testx==0)
-					++outcount;
-					GrB_Matrix_setElement_BOOL(e->dest->customized_filter,1,filters1[i],filters1[i]);
-					// ++outcount;
+					if(filters2[j]==filters1[i])
+					{
+						++outcount;
+						GrB_Matrix_setElement_BOOL(e->dest->customized_filter,1,filters1[i],filters1[i]);
+						break;
+					}
 				}
-			}
+			}// TODO to be optimized
 			
 			fprintf(fp,"%s %d\n",e->dest->alias,outcount);
 			GrB_Matrix_nvals(&nvals, e->dest->customized_filter);
