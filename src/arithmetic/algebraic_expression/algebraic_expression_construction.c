@@ -558,14 +558,26 @@ void customized_filter_mql
 				path2=array_append(path2, e);
 			}
 			e = path[i];
+
+			FILE *fp;
+			fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+			
+
 			NodeID *filters1 = get_filter_mql(path1,transpositions,0);
 			uint edge_converted = array_len(path1);
 			NodeID *filters2 = get_filter_mql(path2,transpositions + edge_converted,1);
 			uint filters1_len=array_len(filters1);
 			uint filters2_len=array_len(filters2);
+
+			for(uint i=0;i<filters1_len;++i)fprintf(fp,"%llu ",filters1[i]);
+			fprintf(fp,"\n");
+			for(uint i=0;i<filters2_len;++i)fprintf(fp,"%llu ",filters2[i]);
+			fprintf(fp,"\n");
+
 			size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 			GrB_Matrix_new(&e->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
 			int outcount=0;
+			
 			for(uint i=0,j=0;i<filters1_len;++i)
 			{
 				for(;j<filters2_len&&filters2[j]<filters1[i];++j);
@@ -579,8 +591,7 @@ void customized_filter_mql
 					// ++outcount;
 				}
 			}
-			FILE *fp;
-			fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+			
 			fprintf(fp,"%s %d\n",e->dest->alias,outcount);
 			GrB_Matrix_nvals(&nvals, e->dest->customized_filter);
 			fprintf(fp,"%s %llu\n",e->dest->alias,nvals);
