@@ -569,14 +569,9 @@ void customized_filter_mql
 			uint filters1_len=array_len(filters1);
 			uint filters2_len=array_len(filters2);
 
-			for(uint i=0;i<filters1_len;++i)fprintf(fp,"%llu ",filters1[i]);
-			fprintf(fp,"\n");
-			for(uint i=0;i<filters2_len;++i)fprintf(fp,"%llu ",filters2[i]);
-			fprintf(fp,"\n");
 
 			size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 			GrB_Matrix_new(&e->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
-			int outcount=0;
 			
 			for(uint i=0;i<filters1_len;++i)
 			{
@@ -584,14 +579,12 @@ void customized_filter_mql
 				{
 					if(filters2[j]==filters1[i])
 					{
-						++outcount;
 						GrB_Matrix_setElement_BOOL(e->dest->customized_filter,1,filters1[i],filters1[i]);
 						break;
 					}
 				}
 			}// TODO to be optimized
 			
-			fprintf(fp,"%s %d\n",e->dest->alias,outcount);
 			GrB_Matrix_nvals(&nvals, e->dest->customized_filter);
 			fprintf(fp,"%s %llu\n",e->dest->alias,nvals);
 			fclose(fp);
@@ -604,30 +597,19 @@ void customized_filter_mql
 	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 	GrB_Matrix_new(&path[0]->src->customized_filter, GrB_BOOL, required_dim, required_dim);
 	GrB_Matrix_new(&path[pathLen-1]->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
-	int outcount=0;
+
 	for(uint i=0;i<src_filters_len;++i)
 	{
-		// bool *testx;
-		// GrB_Matrix_extractElement_BOOL(testx,path[0]->src->customized_filter,src_filter[i],src_filter[i]);
-		// if(*testx==0)
-		++outcount;
 		GrB_Matrix_setElement_BOOL(path[0]->src->customized_filter,1,src_filter[i],src_filter[i]);
 	}
 	FILE *fp;
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
-	fprintf(fp,"%s %d src\n",path[0]->src->alias,outcount);
 	GrB_Matrix_nvals(&nvals, path[0]->src->customized_filter);
 	fprintf(fp,"%s %llu src\n",path[0]->src->alias,nvals);
-	outcount=0;
 	for(uint i=0;i<dest_filters_len;++i)
 	{
-		// bool *testx;
-		// GrB_Matrix_extractElement_BOOL(testx,path[pathLen-1]->dest->customized_filter,dest_filter[i],dest_filter[i]);
-		// if(*testx==0)
-		++outcount;
 		GrB_Matrix_setElement_BOOL(path[pathLen-1]->dest->customized_filter,1,dest_filter[i],dest_filter[i]);
 	}
-	fprintf(fp,"%s %d dest\n",path[pathLen-1]->dest->alias,outcount);
 	GrB_Matrix_nvals(&nvals, path[pathLen-1]->dest->customized_filter);
 	fprintf(fp,"%s %llu dest\n",path[pathLen-1]->dest->alias,nvals);
 	fclose(fp);
