@@ -625,21 +625,18 @@ void customized_filter_mql
 			uint filters1_len=array_len(filters1);
 			uint filters2_len=array_len(filters2);
 			heap_sort_mql(filters1,filters1_len);
-			for(uint i=0;i<filters1_len;++i)fprintf(fp,"%llu ",filters1[i]);
-			fprintf(fp,"\n");
+			// for(uint i=0;i<filters1_len;++i)fprintf(fp,"%llu ",filters1[i]);
+			// fprintf(fp,"\n");
 
 			size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 			GrB_Matrix_new(&e->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
 			
-			for(uint i=0;i<filters1_len;++i)
+			for(uint i=0,j=0;i<filters1_len;++i)
 			{
-				for(uint j=0;j<filters2_len;++j)
+				for(;j<filters2_len&&filters2[j]<filters1[i];++j);
+				if(j<filters2_len&&filters2[j]==filters1[i])
 				{
-					if(filters2[j]==filters1[i])
-					{
-						GrB_Matrix_setElement_BOOL(e->dest->customized_filter,1,filters1[i],filters1[i]);
-						break;
-					}
+					GrB_Matrix_setElement_BOOL(e->dest->customized_filter,1,filters1[i],filters1[i]);
 				}
 			}// TODO to be optimized
 			
