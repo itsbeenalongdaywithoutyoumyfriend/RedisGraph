@@ -540,7 +540,14 @@ NodeID * get_filter_mql
 // 		}
 // 	}
 // }
-void max_heapify(NodeID arr[], int start, int end) 
+void swap_mql(int* a, int* b)
+{
+    int temp = *b;
+    *b = *a;
+    *a = temp;
+}
+
+void max_heapify_mql(NodeID arr[], int start, int end) 
 {
     //建立父节点指标和子节点指标
     int dad = start;
@@ -554,24 +561,24 @@ void max_heapify(NodeID arr[], int start, int end)
             return;
         else  //否则交换父子内容再继续子节点和孙节点比较
         {
-            swap(&arr[dad], &arr[son]);
+            swap_mql(&arr[dad], &arr[son]);
             dad = son;
             son = dad * 2 + 1;
         }
     }
 }
  
-void heap_sort(NodeID arr[], int len) 
+void heap_sort_mql(NodeID arr[], int len) 
 {
     int i;
     //初始化，i从最後一个父节点开始调整
     for (i = len / 2 - 1; i >= 0; i--)
-        max_heapify(arr, i, len - 1);
+        max_heapify_mql(arr, i, len - 1);
     //先将第一个元素和已排好元素前一位做交换，再重新调整，直到排序完毕
     for (i = len - 1; i > 0; i--) 
     {
-        swap(&arr[0], &arr[i]);
-        max_heapify(arr, 0, i - 1);
+        swap_mql(&arr[0], &arr[i]);
+        max_heapify_mql(arr, 0, i - 1);
     }
 }
 
@@ -620,7 +627,7 @@ void customized_filter_mql
 			heap_sort(filters1,filters1_len);
 			for(uint i=0;i<filters1_len;++i)fprintf(fp,"%llu ",filters1[i]);
 			fprintf(fp,"\n");
-			
+
 			size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 			GrB_Matrix_new(&e->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
 			
