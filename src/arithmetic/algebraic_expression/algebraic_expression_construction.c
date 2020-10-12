@@ -624,7 +624,7 @@ void customized_filter_mql
 			NodeID *filters2 = get_filter_mql(path2,transpositions + edge_converted,1);
 			uint filters1_len=array_len(filters1);
 			uint filters2_len=array_len(filters2);
-			heap_sort(filters1,filters1_len);
+			heap_sort_mql(filters1,filters1_len);
 			for(uint i=0;i<filters1_len;++i)fprintf(fp,"%llu ",filters1[i]);
 			fprintf(fp,"\n");
 
