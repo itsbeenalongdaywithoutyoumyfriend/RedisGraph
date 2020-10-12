@@ -540,9 +540,9 @@ NodeID * get_filter_mql
 // 		}
 // 	}
 // }
-void swap_mql(int* a, int* b)
+void swap_mql(NodeID* a, NodeID* b)
 {
-    int temp = *b;
+    NodeID temp = *b;
     *b = *a;
     *a = temp;
 }
@@ -638,7 +638,7 @@ void customized_filter_mql
 				{
 					GrB_Matrix_setElement_BOOL(e->dest->customized_filter,1,filters1[i],filters1[i]);
 				}
-			}// TODO to be optimized
+			}
 			
 			GrB_Matrix_nvals(&nvals, e->dest->customized_filter);
 			fprintf(fp,"%s %llu\n",e->dest->alias,nvals);
