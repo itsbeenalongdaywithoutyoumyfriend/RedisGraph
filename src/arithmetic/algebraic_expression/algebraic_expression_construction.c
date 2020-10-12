@@ -526,6 +526,55 @@ NodeID * get_filter_mql
 }
 
 
+// void radixsort_mql(NodeID *to_be_sorted)
+// {
+// 	int origin_len=array_len(to_be_sorted);
+// 	NodeID *radix[10];
+// 	for(int i=0;i<10;++i)radix[i]=array_new(NodeID,origin_len);
+// 	int cnt=0;
+// 	while(true)
+// 	{
+// 		for(int i=0;i<origin_len;++i)
+// 		{
+
+// 		}
+// 	}
+// }
+void max_heapify(NodeID arr[], int start, int end) 
+{
+    //建立父节点指标和子节点指标
+    int dad = start;
+    int son = dad * 2 + 1;
+    while (son <= end)  //若子节点指标在范围内才做比较
+        {
+            if (son + 1 <= end && arr[son] < arr[son + 1]) 
+            //先比较两个子节点大小，选择最大的
+            son++;
+        if (arr[dad] > arr[son]) //如果父节点大於子节点代表调整完毕，直接跳出函数
+            return;
+        else  //否则交换父子内容再继续子节点和孙节点比较
+        {
+            swap(&arr[dad], &arr[son]);
+            dad = son;
+            son = dad * 2 + 1;
+        }
+    }
+}
+ 
+void heap_sort(NodeID arr[], int len) 
+{
+    int i;
+    //初始化，i从最後一个父节点开始调整
+    for (i = len / 2 - 1; i >= 0; i--)
+        max_heapify(arr, i, len - 1);
+    //先将第一个元素和已排好元素前一位做交换，再重新调整，直到排序完毕
+    for (i = len - 1; i > 0; i--) 
+    {
+        swap(&arr[0], &arr[i]);
+        max_heapify(arr, 0, i - 1);
+    }
+}
+
 void customized_filter_mql
 (
 	QGEdge **path,
@@ -568,8 +617,10 @@ void customized_filter_mql
 			NodeID *filters2 = get_filter_mql(path2,transpositions + edge_converted,1);
 			uint filters1_len=array_len(filters1);
 			uint filters2_len=array_len(filters2);
-
-
+			heap_sort(filters1,filters1_len);
+			for(uint i=0;i<filters1_len;++i)fprintf(fp,"%llu ",filters1[i]);
+			fprintf(fp,"\n");
+			
 			size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 			GrB_Matrix_new(&e->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
 			
