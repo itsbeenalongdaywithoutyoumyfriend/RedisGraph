@@ -582,13 +582,52 @@ void heap_sort_mql(NodeID arr[], int len)
     }
 }
 
+void fill_customized_filter_mql
+(
+	GrB_Matrix *to_be_filled,
+	NodeID *filter_array // must be sorted
+){
+	GraphContext *gc = QueryCtx_GetGraphCtx();
+	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
+	uint filter_len=array_len(filter_array);
+	if(*to_be_filled==GrB_NULL)
+	{
+		GrB_Matrix_new(to_be_filled, GrB_BOOL, required_dim, required_dim);
+		for(uint i=0;i<filter_len;++i)
+		{
+			GrB_Matrix_setElement_BOOL(*to_be_filled,1,filter_array[i],filter_array[i]);
+		}
+	}
+	else
+	{
+		GxB_MatrixTupleIter *iter=NULL;
+		GxB_MatrixTupleIter_new(&iter, *to_be_filled);
+		NodeID src_id = INVALID_ENTITY_ID;
+		NodeID dest_id = INVALID_ENTITY_ID;
+		bool depleted = false;
+		uint i=0;
+		while(true)
+		{
+			if(iter) GxB_MatrixTupleIter_next(iter, &src_id, &dest_id, &depleted);
+			if(depleted) break;
+			while(i<filter_len&&filter_array[i]<src_id)++i;
+			if(i>=filter_len||filter_array[i]!=src_id)
+			{
+				GrB_Matrix_setElement_BOOL(*to_be_filled,0,filter_array[i],filter_array[i]);
+			}
+		}
+	}
+}
+
+
+
+
 void customized_filter_mql
 (
 	QGEdge **path,
 	bool *transpositions,
 	const QueryGraph *qg
 ){
-	GraphContext *gc = QueryCtx_GetGraphCtx();
 	QGEdge *e = NULL;
 	GrB_Index nvals;
 	int pathLen = array_len(path);
@@ -625,21 +664,10 @@ void customized_filter_mql
 			uint filters1_len=array_len(filters1);
 			uint filters2_len=array_len(filters2);
 			heap_sort_mql(filters1,filters1_len);
-			// for(uint i=0;i<filters1_len;++i)fprintf(fp,"%llu ",filters1[i]);
-			// fprintf(fp,"\n");
 
-			size_t required_dim = Graph_RequiredMatrixDim(gc->g);
-			GrB_Matrix_new(&e->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
-			
-			for(uint i=0,j=0;i<filters1_len;++i)
-			{
-				for(;j<filters2_len&&filters2[j]<filters1[i];++j);
-				if(j<filters2_len&&filters2[j]==filters1[i])
-				{
-					GrB_Matrix_setElement_BOOL(e->dest->customized_filter,1,filters1[i],filters1[i]);
-				}
-			}
-			
+			fill_customized_filter_mql(&e->dest->customized_filter,filters1);
+			fill_customized_filter_mql(&e->dest->customized_filter,filters2);
+
 			GrB_Matrix_nvals(&nvals, e->dest->customized_filter);
 			fprintf(fp,"%s %llu\n",e->dest->alias,nvals);
 			fclose(fp);
@@ -647,24 +675,13 @@ void customized_filter_mql
 	}
 	NodeID *src_filter=get_filter_mql(path,transpositions,1);
 	NodeID *dest_filter=get_filter_mql(path,transpositions,0);
-	uint src_filters_len=array_len(src_filter);
-	uint dest_filters_len=array_len(dest_filter);
-	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
-	GrB_Matrix_new(&path[0]->src->customized_filter, GrB_BOOL, required_dim, required_dim);
-	GrB_Matrix_new(&path[pathLen-1]->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
 
-	for(uint i=0;i<src_filters_len;++i)
-	{
-		GrB_Matrix_setElement_BOOL(path[0]->src->customized_filter,1,src_filter[i],src_filter[i]);
-	}
-	FILE *fp;
+	fill_customized_filter_mql(&path[0]->src->customized_filter,src_filter);
+	fill_customized_filter_mql(&path[pathLen-1]->dest->customized_filter,dest_filter);
+	
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
 	GrB_Matrix_nvals(&nvals, path[0]->src->customized_filter);
 	fprintf(fp,"%s %llu src\n",path[0]->src->alias,nvals);
-	for(uint i=0;i<dest_filters_len;++i)
-	{
-		GrB_Matrix_setElement_BOOL(path[pathLen-1]->dest->customized_filter,1,dest_filter[i],dest_filter[i]);
-	}
 	GrB_Matrix_nvals(&nvals, path[pathLen-1]->dest->customized_filter);
 	fprintf(fp,"%s %llu dest\n",path[pathLen-1]->dest->alias,nvals);
 	fclose(fp);
