@@ -678,7 +678,8 @@ void customized_filter_mql
 
 	fill_customized_filter_mql(&path[0]->src->customized_filter,src_filter);
 	fill_customized_filter_mql(&path[pathLen-1]->dest->customized_filter,dest_filter);
-	
+
+	FILE *fp;
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
 	GrB_Matrix_nvals(&nvals, path[0]->src->customized_filter);
 	fprintf(fp,"%s %llu src\n",path[0]->src->alias,nvals);
