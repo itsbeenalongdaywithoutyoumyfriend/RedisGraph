@@ -613,7 +613,7 @@ void fill_customized_filter_mql
 			while(i<filter_len&&filter_array[i]<src_id)++i;
 			if(i>=filter_len||filter_array[i]!=src_id)
 			{
-				GrB_Matrix_setElement_BOOL(*to_be_filled,0,filter_array[i],filter_array[i]);
+				GrB_Matrix_setElement_BOOL(*to_be_filled,0,src_id,src_id);
 			}
 		}
 	}
