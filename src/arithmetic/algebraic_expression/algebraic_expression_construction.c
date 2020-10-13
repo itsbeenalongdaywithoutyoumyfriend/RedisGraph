@@ -420,9 +420,9 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 	}
 
 	if((e->dest->customized_filter)!=GrB_NULL){
-		GrB_Matrix *leak_memory=rm_malloc(sizeof(GrB_Matrix));
-		GrB_Matrix_dup(leak_memory,e->dest->customized_filter);
-		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(*leak_memory, true, e->dest->alias, e->dest->alias, NULL, e->dest->label));
+		// GrB_Matrix *leak_memory=rm_malloc(sizeof(GrB_Matrix));
+		// GrB_Matrix_dup(leak_memory,e->dest->customized_filter);
+		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, true, e->dest->alias, e->dest->alias, NULL, e->dest->label));
 	}
 	// GraphContext *gc = QueryCtx_GetGraphCtx();
 	// size_t required_dim = Graph_RequiredMatrixDim(gc->g);

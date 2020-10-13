@@ -104,10 +104,10 @@ void QGNode_Free(QGNode *node) {
 	if(node->outgoing_edges) array_free(node->outgoing_edges);
 	if(node->incoming_edges) array_free(node->incoming_edges);
 
-	if(node->customized_filter != GrB_NULL) {
-		GrB_Matrix_free(&node->customized_filter);
+	// if(node->customized_filter != GrB_NULL) {
+	// 	GrB_Matrix_free(&node->customized_filter);
 		node->customized_filter = GrB_NULL;
-	}
+	// }
 
 	rm_free(node);
 }
