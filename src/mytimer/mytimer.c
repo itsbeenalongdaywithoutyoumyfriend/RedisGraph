@@ -15,5 +15,5 @@ void simpletimer_start_mql()
 int simpletimer_end_mql() // ms
 {
 	clock_t d=simpletimer_cal_mql();
-	return d;
+	return d*1.0/CLOCKS_PER_SEC*1000;
 }
