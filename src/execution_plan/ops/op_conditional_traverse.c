@@ -7,6 +7,7 @@
 #include "op_conditional_traverse.h"
 #include "shared/print_functions.h"
 #include "../../query_ctx.h"
+#include "../../mytimer/mytimer.h"
 
 /* Forward declarations. */
 static OpResult CondTraverseInit(OpBase *opBase);
@@ -116,6 +117,9 @@ static OpResult CondTraverseInit(OpBase *opBase) {
  * traversal's endpoints and, if required, an edge.
  * Returns NULL once all traversals have been performed. */
 static Record CondTraverseConsume(OpBase *opBase) {
+
+	timers_append_mql(opBase);
+
 	CondTraverse *op = (CondTraverse *)opBase;
 	OpBase *child = op->op.children[0];
 
@@ -159,7 +163,11 @@ static Record CondTraverseConsume(OpBase *opBase) {
 		// No data.
 		if(op->recordCount == 0) return NULL;
 
+		simpletimer_start_mql();
 		_traverse(op);
+		double time_used=simpletimer_end_mql();
+		add_to_timer_mql(opBase,time_used,op->recordCount);
+
 	}
 
 	/* Get node from current column. */
