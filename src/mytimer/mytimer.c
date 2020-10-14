@@ -1,8 +1,7 @@
 #include "mytimer.h"
 #include "../execution_plan/ops/op.h"
 #include "../execution_plan/ops/op_conditional_traverse.h"
-#include<time.h>
-
+#include <sys/time.h>
 Timer_mql** get_timers_mql()
 {
 	static Timer_mql* timers;
@@ -71,13 +70,15 @@ void timers_output_CondTraverse_mql()
         
 }
 
-clock_t simpletimer_cal_mql()
+double simpletimer_cal_mql()
 {
-	static clock_t oldclock=0;
-	clock_t newclock=clock();
-	clock_t d=newclock-oldclock;
+	static double oldclock=0;
+	timeval nowtime;
+    gettimeofday(&nowtime,0);
+    double newclock=1000000*nowtime.tv_sec+nowtime.tv_usec;
+	double d=newclock-oldclock;
 	oldclock=newclock;
-	return d;
+	return d/1000.0;
 }
 void simpletimer_start_mql()
 {
@@ -85,6 +86,6 @@ void simpletimer_start_mql()
 }
 double simpletimer_end_mql() // ms
 {
-	clock_t d=simpletimer_cal_mql();
-	return d*1.0/CLOCKS_PER_SEC*1000;
+	double d=simpletimer_cal_mql();
+	return d;
 }
