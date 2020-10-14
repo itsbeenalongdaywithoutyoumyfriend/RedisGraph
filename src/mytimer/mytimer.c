@@ -9,10 +9,10 @@ clock_t simpletimer_cal_mql()
 }
 void simpletimer_start_mql()
 {
-	timer_cal_mql();
+	simpletimer_cal_mql();
 }
 int simpletimer_end_mql() // ms
 {
-	clock_t d=timer_cal_mql();
+	clock_t d=simpletimer_cal_mql();
 	return (int)(1.0*d/CLK_TCK*1000);
 }
