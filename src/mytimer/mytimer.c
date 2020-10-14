@@ -1,4 +1,5 @@
 #include "mytimer.h"
+#include<time.h>
 clock_t simpletimer_cal_mql()
 {
 	static clock_t oldclock=0;
