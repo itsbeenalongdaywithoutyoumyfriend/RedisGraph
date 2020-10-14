@@ -695,8 +695,8 @@ void customized_filter_mql
 	fprintf(fp,"%s %llu dest\n",path[pathLen-1]->dest->alias,nvals);
 
 	
-	int time_used=simpletimer_end_mql();
-	fprintf(fp,"%dms used in customized_filter_mql\n",time_used);
+	double time_used=simpletimer_end_mql();
+	fprintf(fp,"%lfms used in customized_filter_mql\n",time_used);
 
 
 	fclose(fp);
