@@ -8,6 +8,7 @@
 #include "../../util/arr.h"
 #include "../../query_ctx.h"
 #include "../../algorithms/algorithms.h"
+#include "../../mytimer/mytimer.h"
 
 /* Node with (income + outcome degree) > 2
  * is considered a highly connected node. */
@@ -634,6 +635,7 @@ void customized_filter_mql
 	bool *transpositions,
 	const QueryGraph *qg
 ){
+	simpletimer_start_mql();
 	QGEdge *e = NULL;
 	GrB_Index nvals;
 	int pathLen = array_len(path);
@@ -691,6 +693,12 @@ void customized_filter_mql
 	fprintf(fp,"%s %llu src\n",path[0]->src->alias,nvals);
 	GrB_Matrix_nvals(&nvals, path[pathLen-1]->dest->customized_filter);
 	fprintf(fp,"%s %llu dest\n",path[pathLen-1]->dest->alias,nvals);
+
+	
+	int time_used=simpletimer_end_mql();
+	fprintf(fp,"%dms used in customized_filter_mql\n",time_used);
+
+
 	fclose(fp);
 }
 
