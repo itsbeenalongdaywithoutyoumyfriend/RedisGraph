@@ -26,7 +26,7 @@ void timers_append_mql(OpBase *p)
         }
     }
     if(ifexist)return;
-    Timer_mql* newrecord=rm_alloc(sizeof(Timer_mql));
+    Timer_mql* newrecord=rm_malloc(sizeof(Timer_mql));
     newrecord->time_sum=0;
     newrecord->record_sum=0;
     newrecord->p=p;
