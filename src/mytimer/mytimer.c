@@ -73,7 +73,7 @@ void timers_output_CondTraverse_mql()
 double simpletimer_cal_mql()
 {
 	static double oldclock=0;
-	timeval nowtime;
+	struct timeval nowtime;
     gettimeofday(&nowtime,0);
     double newclock=1000000*nowtime.tv_sec+nowtime.tv_usec;
 	double d=newclock-oldclock;
