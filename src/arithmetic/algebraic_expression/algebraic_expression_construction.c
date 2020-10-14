@@ -590,6 +590,7 @@ void fill_customized_filter_mql
 	GraphContext *gc = QueryCtx_GetGraphCtx();
 	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 	uint filter_len=array_len(filter_array);
+	int cnt=0;
 	if(*to_be_filled==GrB_NULL)
 	{
 		GrB_Matrix_new(to_be_filled, GrB_BOOL, required_dim, required_dim);
@@ -615,8 +616,13 @@ void fill_customized_filter_mql
 			{
 				GrB_Matrix_setElement_BOOL(*to_be_filled,0,src_id,src_id);
 			}
+			else ++cnt;
 		}
 	}
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	fprintf(fp,"%d\n",cnt);
+	fclose(fp);
 }
 
 
