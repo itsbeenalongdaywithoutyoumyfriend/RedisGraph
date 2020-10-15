@@ -166,10 +166,10 @@ static Record CondTraverseConsume(OpBase *opBase) {
 		simpletimer_start_mql();
 		_traverse(op);
 		double time_used=simpletimer_end_mql();
-		add_to_timer_mql(opBase,time_used,op->recordCount);
+		add_to_timer_mql(opBase,time_used,0);
 
 	}
-
+	add_to_timer_mql(opBase,0,1);
 	/* Get node from current column. */
 	op->r = op->records[src_id];
 	/* Populate the destination node and add it to the Record.
