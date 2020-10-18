@@ -707,8 +707,8 @@ void customized_filter_mql
 			fprintf(fp,"%s %llu\n",e->dest->alias,nvals);
 			fclose(fp);
 
-			array_free(path1);
-			array_free(path2);
+			// array_free(path1);
+			// array_free(path2);
 			array_free(filters1);
 			array_free(filters2);
 		}
