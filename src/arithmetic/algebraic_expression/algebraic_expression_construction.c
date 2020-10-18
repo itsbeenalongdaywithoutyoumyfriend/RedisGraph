@@ -638,7 +638,7 @@ void fill_customized_filter_mql
 			}
 		}
 		uint to_be_added_len=array_len(to_be_added);
-		GrB_Matrix_free(to_be_filled);
+		// GrB_Matrix_free(to_be_filled);
 		GrB_Matrix_new(to_be_filled, GrB_BOOL, required_dim, required_dim);
 		for(i=0;i<to_be_added_len;++i)
 		{
