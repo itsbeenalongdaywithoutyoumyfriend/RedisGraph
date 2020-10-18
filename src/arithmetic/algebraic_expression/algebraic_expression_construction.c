@@ -644,7 +644,7 @@ void fill_customized_filter_mql
 		{
 			GrB_Matrix_setElement_BOOL(*to_be_filled,1,to_be_added[i],to_be_added[i]);
 		}
-		array_free(to_be_added);
+		// array_free(to_be_added);
 	}
 	FILE *fp;
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
