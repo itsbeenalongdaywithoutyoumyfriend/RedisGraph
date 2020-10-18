@@ -638,11 +638,13 @@ void fill_customized_filter_mql
 			}
 		}
 		uint to_be_added_len=array_len(to_be_added);
+		GrB_Matrix_free(to_be_filled);
 		GrB_Matrix_new(to_be_filled, GrB_BOOL, required_dim, required_dim);
 		for(i=0;i<to_be_added_len;++i)
 		{
 			GrB_Matrix_setElement_BOOL(*to_be_filled,1,to_be_added[i],to_be_added[i]);
 		}
+		array_free(to_be_added);
 	}
 	FILE *fp;
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
@@ -663,6 +665,8 @@ void customized_filter_mql
 	QGEdge *e = NULL;
 	GrB_Index nvals;
 	int pathLen = array_len(path);
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
 	/* Scan path left to right,
 	 * construct intermidate paths by "breaking" on referenced entities. */
 	for(int i = 0; i < pathLen - 1; i++) {
@@ -686,8 +690,7 @@ void customized_filter_mql
 			}
 			e = path[i];
 
-			FILE *fp;
-			fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+			
 			
 
 			NodeID *filters1 = get_filter_mql(path1,transpositions,0);
@@ -703,6 +706,11 @@ void customized_filter_mql
 			GrB_Matrix_nvals(&nvals, e->dest->customized_filter);
 			fprintf(fp,"%s %llu\n",e->dest->alias,nvals);
 			fclose(fp);
+
+			array_free(path1);
+			array_free(path2);
+			array_free(filters1);
+			array_free(filters2);
 		}
 	}
 	NodeID *src_filter=get_filter_mql(path,transpositions,1);
@@ -711,8 +719,6 @@ void customized_filter_mql
 	fill_customized_filter_mql(&path[0]->src->customized_filter,src_filter);
 	fill_customized_filter_mql(&path[pathLen-1]->dest->customized_filter,dest_filter);
 
-	FILE *fp;
-	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
 	GrB_Matrix_nvals(&nvals, path[0]->src->customized_filter);
 	fprintf(fp,"%s %llu src\n",path[0]->src->alias,nvals);
 	GrB_Matrix_nvals(&nvals, path[pathLen-1]->dest->customized_filter);
@@ -724,6 +730,9 @@ void customized_filter_mql
 
 
 	fclose(fp);
+	array_free(src_filter);
+	array_free(dest_filter);
+
 }
 
 // Construct algebraic expression form query graph.
