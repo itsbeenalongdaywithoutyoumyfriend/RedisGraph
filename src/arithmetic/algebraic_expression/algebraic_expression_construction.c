@@ -183,6 +183,19 @@ static AlgebraicExpression *_AlgebraicExpression_OperandFromNode
 	return AlgebraicExpression_NewOperand(GrB_NULL, diagonal, n->alias, n->alias, NULL, n->label);
 }
 
+static AlgebraicExpression *_AlgebraicExpression_OperandFromNodeFilter_mql
+(
+	QGNode *n,
+	GrB_Matrix *p;
+) {
+	bool diagonal = true;
+	bool transpose = false;
+	AlgebraicExpression *ret=AlgebraicExpression_NewOperand(GrB_NULL, diagonal, n->alias, n->alias, NULL, n->label);
+	ret->operand.customized_filter_pointer=p;
+	return ret;
+}
+
+
 static AlgebraicExpression *_AlgebraicExpression_OperandFromEdge
 (
 	QGEdge *e,
@@ -423,7 +436,7 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 	if((e->dest->customized_filter)!=GrB_NULL){
 		// GrB_Matrix *leak_memory=rm_malloc(sizeof(GrB_Matrix));
 		// GrB_Matrix_dup(leak_memory,e->dest->customized_filter);
-		root = _AlgebraicExpression_MultiplyToTheRight(root, AlgebraicExpression_NewOperand(e->dest->customized_filter, true, e->dest->alias, e->dest->alias, NULL, e->dest->label));
+		root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNodeFilter_mql(e->dest,&(e->dest->customized_filter)));
 	}
 	// GraphContext *gc = QueryCtx_GetGraphCtx();
 	// size_t required_dim = Graph_RequiredMatrixDim(gc->g);

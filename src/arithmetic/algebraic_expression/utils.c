@@ -216,6 +216,12 @@ static void _AlgebraicExpression_PopulateOperand(AlgebraicExpression *operand,
 
 	GrB_Matrix m = GrB_NULL;
 	const char *label = operand->operand.label;
+	GrB_Matrix *p=operand->operand.customized_filter_pointer;
+	if(p!=NULL)
+	{
+		m=*p;
+	}
+	else
 	if(label == NULL) {
 		m = Graph_GetAdjacencyMatrix(gc->g);
 	} else if(operand->operand.diagonal) {
