@@ -186,7 +186,7 @@ static AlgebraicExpression *_AlgebraicExpression_OperandFromNode
 static AlgebraicExpression *_AlgebraicExpression_OperandFromNodeFilter_mql
 (
 	QGNode *n,
-	GrB_Matrix *p;
+	GrB_Matrix *p
 ) {
 	bool diagonal = true;
 	bool transpose = false;
