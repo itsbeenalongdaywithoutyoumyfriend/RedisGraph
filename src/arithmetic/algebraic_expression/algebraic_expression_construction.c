@@ -620,7 +620,7 @@ void fill_customized_filter_mql
 		NodeID src_id = INVALID_ENTITY_ID;
 		NodeID dest_id = INVALID_ENTITY_ID;
 		bool depleted = false;
-		NodeID* to_be_del=array_new(NodeID, required_dim);
+		NodeID* to_be_added=array_new(NodeID, required_dim);
 		uint i=0;
 		while(true)
 		{
@@ -630,19 +630,18 @@ void fill_customized_filter_mql
 			if(i>=filter_len||filter_array[i]!=src_id)
 			{
 				;
-				// to_be_del=array_append(to_be_del,src_id);
 			}
 			else 
 			{
 				++cnt;
-				to_be_del=array_append(to_be_del,src_id);
+				to_be_added=array_append(to_be_added,src_id);
 			}
 		}
-		uint to_be_del_len=array_len(to_be_del);
+		uint to_be_added_len=array_len(to_be_added);
 		GrB_Matrix_new(to_be_filled, GrB_BOOL, required_dim, required_dim);
-		for(i=0;i<to_be_del_len;++i)
+		for(i=0;i<to_be_added_len;++i)
 		{
-			GrB_Matrix_setElement_BOOL(*to_be_filled,1,to_be_del[i],to_be_del[i]);
+			GrB_Matrix_setElement_BOOL(*to_be_filled,1,to_be_added[i],to_be_added[i]);
 		}
 	}
 	FILE *fp;
