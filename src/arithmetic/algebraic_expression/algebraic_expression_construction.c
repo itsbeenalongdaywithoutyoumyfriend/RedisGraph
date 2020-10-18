@@ -709,8 +709,8 @@ void customized_filter_mql
 
 			// array_free(path1);
 			// array_free(path2);
-			array_free(filters1);
-			array_free(filters2);
+			// array_free(filters1);
+			// array_free(filters2);
 		}
 	}
 	NodeID *src_filter=get_filter_mql(path,transpositions,1);
@@ -730,8 +730,8 @@ void customized_filter_mql
 
 
 	fclose(fp);
-	array_free(src_filter);
-	array_free(dest_filter);
+	// array_free(src_filter);
+	// array_free(dest_filter);
 
 }
 
