@@ -332,13 +332,13 @@ ResultSet *ExecutionPlan_Execute(ExecutionPlan *plan) {
 
 	ExecutionPlan_Init(plan);
 
-	timers_init_mql();
+	// timers_init_mql();
 
 	Record r = NULL;
 	// Execute the root operation and free the processed Record until the data stream is depleted.
 	while((r = OpBase_Consume(plan->root)) != NULL) ExecutionPlan_ReturnRecord(r->owner, r);
 
-	timers_output_CondTraverse_mql();
+	// timers_output_CondTraverse_mql();
 
 	return QueryCtx_GetResultSet();
 }
