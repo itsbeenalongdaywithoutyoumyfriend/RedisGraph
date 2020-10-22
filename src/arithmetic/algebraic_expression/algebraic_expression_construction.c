@@ -715,6 +715,8 @@ void customized_filter_mql
 	}
 	NodeID *src_filter=get_filter_mql(path,transpositions,1);
 	NodeID *dest_filter=get_filter_mql(path,transpositions,0);
+	uint dest_filter_len=array_len(dest_filter);
+	heap_sort_mql(dest_filter,dest_filter_len);
 
 	fill_customized_filter_mql(&path[0]->src->customized_filter,src_filter);
 	fill_customized_filter_mql(&path[pathLen-1]->dest->customized_filter,dest_filter);
