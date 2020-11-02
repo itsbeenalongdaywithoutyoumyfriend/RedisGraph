@@ -1,5 +1,6 @@
 
 #include "../arithmetic/algebraic_expression.h"
+#include "../util/arr.h"
 #include "dfs.h"
 
 void customized_filter_on_cycle_mql(QueryGraph *qg)
