@@ -9,6 +9,7 @@
 #include "rax.h"
 #include "../graph/entities/qg_edge.h"
 #include "customized_filter.h"
+#include "../graph/query_graph.h"
 
 bool _DFS(QGNode *n, int level, bool close_cycle, int current_level, rax *visited, rax *used_edges,
 		  QGEdge ***path) {
@@ -100,5 +101,5 @@ void DFS_mql(QueryGraph *qg){
 	QGEdge **path = array_new(QGEdge *, 0); // Path found.
 	bool transpositions[128];
 	QGNode *n = qg->nodes[0];
-	_DFS_mql(n,0,visited,used_edges,&path,transpositions);
+	_DFS_mql(n,0,visited,used_edges,&path,transpositions,qg);
 }
