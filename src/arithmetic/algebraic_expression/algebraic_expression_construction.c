@@ -499,6 +499,43 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath_mql
 	return root;
 }
 
+NodeID * get_filter_mql_on_cycle_mql
+(
+	QGEdge **path,
+	bool *transpositions
+)
+{
+	GraphContext *gc = QueryCtx_GetGraphCtx();
+	AlgebraicExpression *exp=_AlgebraicExpression_FromPath_mql(path,transpositions);
+	GrB_Matrix res= GrB_NULL;
+	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
+	NodeID *filters = array_new(NodeID,required_dim);
+	GrB_Matrix_new(&res, GrB_BOOL, required_dim, required_dim);
+	AlgebraicExpression_Optimize(&exp);
+	assert(exp);
+	if(exp->type == AL_OPERATION){
+		AlgebraicExpression_Eval(exp, res);
+	}
+	else
+	{
+		assert(exp->type == AL_OPERAND);
+		res = exp->operand.matrix;
+	}
+
+	GxB_MatrixTupleIter *iter=NULL;
+	GxB_MatrixTupleIter_new(&iter, res);
+	NodeID src_id = INVALID_ENTITY_ID;
+	NodeID dest_id = INVALID_ENTITY_ID;
+	bool depleted = false;
+	while(true)
+	{
+		if(iter) GxB_MatrixTupleIter_next(iter, &src_id, &dest_id, &depleted);
+		if(depleted) break;
+		if(src_id==dest_id)filters= array_append(filters,src_id);
+	}
+	return filters;
+}
+
 
 NodeID * get_filter_mql
 (
@@ -766,7 +803,7 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 
 	bool acyclic = IsAcyclicGraph(qg);
 	QueryGraph *g = QueryGraph_Clone(qg);
-
+	if(acyclic)customized_filter_on_cycle_mql(qg);
 	// As long as the query-graph isn't empty.
 	while(QueryGraph_EdgeCount(g) > 0) {
 		// Get leaf nodes at the deepest level.
@@ -792,7 +829,7 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 		bool transpositions[path_len];
 		_normalizePath(path, path_len, transpositions);
 
-		customized_filter_mql(path,transpositions,qg);
+		// customized_filter_mql(path,transpositions,qg);
 
 		QGEdge ***paths = _Intermediate_Paths(path, qg);
 		AlgebraicExpression **sub_exps = array_new(AlgebraicExpression *, 1);

@@ -8,6 +8,7 @@
 #include "../util/arr.h"
 #include "rax.h"
 #include "../graph/entities/qg_edge.h"
+#include "customized_filter.h"
 
 bool _DFS(QGNode *n, int level, bool close_cycle, int current_level, rax *visited, rax *used_edges,
 		  QGEdge ***path) {
@@ -61,4 +62,43 @@ QGEdge **DFS(QGNode *s, int level, bool close_cycle) {
 	raxFree(visited);
 	raxFree(used_edges);
 	return path;
+}
+
+
+
+void _DFS_mql(QGNode *n, int current_level, rax *visited, rax *used_edges,
+			  QGEdge ***path, bool *transpositions, QueryGraph *qg)
+{
+	if(!raxInsert(visited, (unsigned char *)n->alias, strlen(n->alias), NULL, NULL)) {
+		// We've already processed n.
+		build_customized_filter_on_cycle_mql(n,current_level,path,transpositions,qg);
+	}
+	for(uint i = 0; i < array_len(n->outgoing_edges); i++) {
+		QGEdge *e = n->outgoing_edges[i];
+		if(!raxInsert(used_edges, (unsigned char *)e->alias, strlen(e->alias), NULL, NULL)) continue;
+		*path = array_append(*path, e);
+		transpositions[current_level]=false;
+		_DFS(e->dest, current_level + 1, visited, used_edges, path, transpositions, qg);
+		array_pop(*path);
+		raxRemove(used_edges, (unsigned char *)e->alias, strlen(e->alias), NULL);
+	}
+
+	for(uint i = 0; i < array_len(n->incoming_edges); i++) {
+		QGEdge *e = n->incoming_edges[i];
+		if(!raxInsert(used_edges, (unsigned char *)e->alias, strlen(e->alias), NULL, NULL)) continue;
+		*path = array_append(*path, e);
+		transpositions[current_level]=true;
+		_DFS_mql(e->src, current_level + 1, visited, used_edges, path, transpositions, qg);
+		array_pop(*path);
+		raxRemove(used_edges, (unsigned char *)e->alias, strlen(e->alias), NULL);
+	}
+	raxRemove(visited, (unsigned char *)n->alias, strlen(n->alias), NULL);
+}
+void DFS_mql(QueryGraph *qg){
+	rax *visited = raxNew();                // Dictionary of visited nodes.
+	rax *used_edges = raxNew();             // Dictionary of used edges.
+	QGEdge **path = array_new(QGEdge *, 0); // Path found.
+	bool transpositions[128];
+	QGNode *n = qg->nodes[0];
+	_DFS_mql(n,0,visited,used_edges,&path,transpositions);
 }
