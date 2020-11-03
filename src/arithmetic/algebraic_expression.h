@@ -60,17 +60,15 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 	const QueryGraph *qg    // Query-graph to process
 );
 
-void fill_customized_filter_mql
+void build_customized_filter_on_cycle_mql
 (
-	GrB_Matrix *to_be_filled,
-	NodeID *filter_array // must be sorted
+	QGNode *n,
+	int path_len,
+	QGEdge ***path,
+	bool *transpositions,
+	QueryGraph *qg
 );
 
-NodeID * get_filter_mql_on_cycle_mql
-(
-	QGEdge **path,
-	bool *transpositions
-);
 
 
 //------------------------------------------------------------------------------
