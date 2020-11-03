@@ -858,7 +858,7 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 
 	bool acyclic = IsAcyclicGraph(qg);
 	QueryGraph *g = QueryGraph_Clone(qg);
-	if(acyclic)customized_filter_on_cycle_mql(qg);
+	if(acyclic)customized_filter_on_cycle_mql(g);
 	// As long as the query-graph isn't empty.
 	while(QueryGraph_EdgeCount(g) > 0) {
 		// Get leaf nodes at the deepest level.
