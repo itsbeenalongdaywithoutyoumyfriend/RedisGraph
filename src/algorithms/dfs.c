@@ -79,7 +79,7 @@ void _DFS_mql(QGNode *n, int current_level, rax *visited, rax *used_edges,
 		if(!raxInsert(used_edges, (unsigned char *)e->alias, strlen(e->alias), NULL, NULL)) continue;
 		*path = array_append(*path, e);
 		transpositions[current_level]=false;
-		_DFS(e->dest, current_level + 1, visited, used_edges, path, transpositions, qg);
+		_DFS_mql(e->dest, current_level + 1, visited, used_edges, path, transpositions, qg);
 		array_pop(*path);
 		raxRemove(used_edges, (unsigned char *)e->alias, strlen(e->alias), NULL);
 	}
