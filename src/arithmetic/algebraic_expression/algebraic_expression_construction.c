@@ -648,6 +648,7 @@ void fill_customized_filter_mql
 		for(uint i=0;i<filter_len;++i)
 		{
 			GrB_Matrix_setElement_BOOL(*to_be_filled,1,filter_array[i],filter_array[i]);
+			++cnt;
 		}
 	}
 	else
