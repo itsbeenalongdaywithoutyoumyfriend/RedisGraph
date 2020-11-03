@@ -12,6 +12,5 @@
 #include "./all_paths.h"
 #include "./detect_cycle.h"
 #include "./longest_path.h"
-#include "./customized_filter.h"
 
 #endif
