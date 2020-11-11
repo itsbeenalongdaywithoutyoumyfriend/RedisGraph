@@ -704,7 +704,6 @@ void customized_filter_mql
 	bool *transpositions,
 	const QueryGraph *qg
 ){
-	simpletimer_start_mql();
 	QGEdge *e = NULL;
 	GrB_Index nvals;
 	int pathLen = array_len(path);
@@ -790,6 +789,8 @@ void customized_filter_on_cycle_mql(QueryGraph *qg)
 
 void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***path, bool *transpositions, QueryGraph *qg)
 {
+
+	simpletimer_start_mql();
 	assert(array_len(*path)==path_len);
 	uint firstPathIndex;
 	for(firstPathIndex=0;firstPathIndex<path_len;++firstPathIndex)
@@ -835,8 +836,11 @@ void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***pat
 		QGEdge *e = part_path[i];
 		if(part_transpositions[i]) QGEdge_Reverse(e);
 	}
-
-
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	double time_used=simpletimer_end_mql();
+	fprintf(fp,"%lfms used in build_customized_filter_on_cycle_mql\n",time_used);
+	fclose(fp);
 }
 // Construct algebraic expression form query graph.
 AlgebraicExpression **AlgebraicExpression_FromQueryGraph
