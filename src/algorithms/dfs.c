@@ -73,6 +73,7 @@ void _DFS_mql(QGNode *n, int current_level, rax *visited, rax *used_edges,
 	if(!raxInsert(visited, (unsigned char *)n->alias, strlen(n->alias), NULL, NULL)) {
 		// We've already processed n.
 		build_customized_filter_on_cycle_mql(n,current_level,path,transpositions,qg);
+		return;
 	}
 	for(uint i = 0; i < array_len(n->outgoing_edges); i++) {
 		QGEdge *e = n->outgoing_edges[i];
