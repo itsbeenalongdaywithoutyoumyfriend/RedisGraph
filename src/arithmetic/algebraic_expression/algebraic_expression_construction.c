@@ -797,7 +797,7 @@ void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***pat
 	uint firstPathIndex;
 	for(firstPathIndex=0;firstPathIndex<path_len;++firstPathIndex)
 	{
-		fprintf(fp,"%s->%s,\n",(*path)[firstPathIndex]->src->alias,(*path)[firstPathIndex]->dest->alias);
+		fprintf(fp,"%s->%s,",(*path)[firstPathIndex]->src->alias,(*path)[firstPathIndex]->dest->alias);
 	}fprintf(fp,"\n");
 	for(firstPathIndex=0;firstPathIndex<path_len;++firstPathIndex)
 	{
