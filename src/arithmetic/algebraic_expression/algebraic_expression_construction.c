@@ -791,8 +791,14 @@ void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***pat
 {
 
 	simpletimer_start_mql();
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
 	assert(array_len(*path)==path_len);
 	uint firstPathIndex;
+	for(firstPathIndex=0;firstPathIndex<path_len;++firstPathIndex)
+	{
+		fprintf(fp,"%s->%s,\n",(*path)[firstPathIndex]->src->alias,(*path)[firstPathIndex]->dest->alias);
+	}fprintf(fp,"\n");
 	for(firstPathIndex=0;firstPathIndex<path_len;++firstPathIndex)
 	{
 		if(transpositions[firstPathIndex]==false&&(*path)[firstPathIndex]->src==n)break;
@@ -836,8 +842,7 @@ void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***pat
 		QGEdge *e = part_path[i];
 		if(part_transpositions[i]) QGEdge_Reverse(e);
 	}
-	FILE *fp;
-	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+
 	double time_used=simpletimer_end_mql();
 	fprintf(fp,"%lfms used in build_customized_filter_on_cycle_mql\n",time_used);
 	fclose(fp);
