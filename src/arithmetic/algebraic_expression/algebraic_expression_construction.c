@@ -835,7 +835,7 @@ void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***pat
 			rotated_transpositions[j]=part_transpositions[(j+i)%part_path_len];
 		}
 		NodeID *filters = get_filter_on_cycle_mql(rotated_path,rotated_transpositions);
-		fill_customized_filter_mql(&part_path[i]->src->customized_filter,filters);
+		// fill_customized_filter_mql(&part_path[i]->src->customized_filter,filters);
 	}
 
 	//undo  transpose.
