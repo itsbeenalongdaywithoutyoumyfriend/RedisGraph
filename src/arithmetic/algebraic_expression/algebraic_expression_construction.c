@@ -533,6 +533,11 @@ NodeID * get_filter_on_cycle_mql
 		if(depleted) break;
 		if(src_id==dest_id)filters= array_append(filters,src_id);
 	}
+	GrB_Matrix_free(&res);
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	fprintf(fp,"getfiltercycle %d\n",array_len(filters));
+	fclose(fp);
 	return filters;
 }
 
