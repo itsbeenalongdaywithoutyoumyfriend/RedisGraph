@@ -27,7 +27,7 @@ static void _populate_filter_matrix(CondTraverse *op) {
 		 * F[i, srcId] = true. */
 		Node *n = Record_GetNode(r, op->srcNodeIdx);
 		NodeID srcId = ENTITY_GET_ID(n);
-		GrB_Matrix_setElement_BOOL(op->F, true, i, srcId);
+		GrB_Matrix_setElement_BOOL(op->F, false, i, srcId);
 	}
 }
 
