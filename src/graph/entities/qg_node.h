@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../../deps/GraphBLAS/Include/GraphBLAS.h"
+#include "graph_entity.h"
 /* Forward declaration of edge */
 struct QGEdge;
 
