@@ -508,17 +508,11 @@ NodeID * get_filter_on_cycle_mql
 		res = exp->operand.matrix;
 	}
 
-	GxB_MatrixTupleIter *iter=NULL;
-	GxB_MatrixTupleIter_new(&iter, res);
-	NodeID src_id = INVALID_ENTITY_ID;
-	NodeID dest_id = INVALID_ENTITY_ID;
-	bool depleted = false;
-	while(true)
-	{
-		if(iter) GxB_MatrixTupleIter_next(iter, &src_id, &dest_id, &depleted);
-		if(depleted) break;
-		if(src_id==dest_id)filters= array_append(filters,src_id);
-	}
+		bool v;
+	for(int i=0;i<required_dim;++i)
+		if(GrB_Matrix_extractElement_BOOL(&v,res,i,i)==GrB_SUCCESS)
+			filters= array_append(filters,i);
+	
 	GrB_Matrix_free(&res);
 	FILE *fp;
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
