@@ -186,7 +186,7 @@ static AlgebraicExpression *_AlgebraicExpression_OperandFromNode
 static AlgebraicExpression *_AlgebraicExpression_OperandFromNodeFilter_mql
 (
 	QGNode *n,
-	GrB_Matrix *p
+	NodeID **p
 ) {
 	bool diagonal = true;
 	bool transpose = false;
@@ -433,23 +433,9 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 		root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNode(e->dest));
 	}
 
-	if((e->dest->customized_filter)!=GrB_NULL){
-		// GrB_Matrix *leak_memory=rm_malloc(sizeof(GrB_Matrix));
-		// GrB_Matrix_dup(leak_memory,e->dest->customized_filter);
+	if((e->dest->customized_filter)!=NULL){
 		root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNodeFilter_mql(e->dest,&(e->dest->customized_filter)));
 	}
-	// GraphContext *gc = QueryCtx_GetGraphCtx();
-	// size_t required_dim = Graph_RequiredMatrixDim(gc->g);
-	// GrB_Matrix res= GrB_NULL;
-	// GrB_Matrix_new(&res, GrB_BOOL, required_dim, required_dim);
-	// AlgebraicExpression_Optimize(&root);
-	// AlgebraicExpression_Eval(root, res);
-	// GrB_Index nvals;
-	// GrB_Matrix_nvals(&nvals, res);
-	
-	// assert(nvals>0);
-	// ++nvals;
-	// assert(nvals>0);
 	
 	return root;
 }
@@ -582,7 +568,6 @@ NodeID * get_filter_mql
 }
 
 
-
 void swap_mql(NodeID* a, NodeID* b)
 {
     NodeID temp = *b;
@@ -627,54 +612,35 @@ void heap_sort_mql(NodeID arr[], int len)
 
 void fill_customized_filter_mql
 (
-	GrB_Matrix *to_be_filled,
+	NodeID **to_be_filled,
 	NodeID *filter_array // must be sorted
-){
+){//will free used filter_array and original to_be_filled
 	GraphContext *gc = QueryCtx_GetGraphCtx();
 	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 	uint filter_len=array_len(filter_array);
 	int cnt=0;
-	if(*to_be_filled==GrB_NULL)
+	if(*to_be_filled==NULL)
 	{
-		GrB_Matrix_new(to_be_filled, GrB_BOOL, required_dim, required_dim);
-		for(uint i=0;i<filter_len;++i)
-		{
-			GrB_Matrix_setElement_BOOL(*to_be_filled,1,filter_array[i],filter_array[i]);
-			++cnt;
-		}
+		*to_be_filled = filter_array;
+		cnt=array_len(filter_array);
 	}
 	else
 	{
-		GxB_MatrixTupleIter *iter=NULL;
-		GxB_MatrixTupleIter_new(&iter, *to_be_filled);
-		NodeID src_id = INVALID_ENTITY_ID;
-		NodeID dest_id = INVALID_ENTITY_ID;
-		bool depleted = false;
-		NodeID* to_be_added=array_new(NodeID, required_dim);
-		uint i=0;
-		while(true)
+		NodeID *origin_filter_array=*to_be_filled;
+		uint origin_filter_len = array_len(origin_filter_array);
+		NodeID *new_filter_array = array_new(NodeID, required_dim);
+		for(uint i=0,j=0;j<origin_filter_len;++j)
 		{
-			if(iter) GxB_MatrixTupleIter_next(iter, &src_id, &dest_id, &depleted);
-			if(depleted) break;
-			while(i<filter_len&&filter_array[i]<src_id)++i;
-			if(i>=filter_len||filter_array[i]!=src_id)
+			while(i<filter_len&&filter_array[i]<origin_filter_array[j])++i;
+			if(i<filter_len&&filter_array[i]==origin_filter_array[j])
 			{
-				;
-			}
-			else 
-			{
-				++cnt;
-				to_be_added=array_append(to_be_added,src_id);
+				new_filter_array = array_append(new_filter_array,filter_array[i]);
 			}
 		}
-		uint to_be_added_len=array_len(to_be_added);
-		GrB_Matrix_free(to_be_filled);
-		GrB_Matrix_new(to_be_filled, GrB_BOOL, required_dim, required_dim);
-		for(i=0;i<to_be_added_len;++i)
-		{
-			GrB_Matrix_setElement_BOOL(*to_be_filled,1,to_be_added[i],to_be_added[i]);
-		}
-		array_free(to_be_added);
+		*to_be_filled = new_filter_array;
+		array_free(origin_filter_array);
+		array_free(filter_array);
+		cnt=array_len(new_filter_array);
 	}
 	FILE *fp;
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
@@ -822,7 +788,7 @@ void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***pat
 			rotated_transpositions[j]=part_transpositions[(j+i)%part_path_len];
 		}
 		NodeID *filters = get_filter_on_cycle_mql(rotated_path,rotated_transpositions);
-		// fill_customized_filter_mql(&part_path[i]->src->customized_filter,filters);
+		fill_customized_filter_mql(&part_path[i]->src->customized_filter,filters);
 	}
 
 	//undo  transpose.

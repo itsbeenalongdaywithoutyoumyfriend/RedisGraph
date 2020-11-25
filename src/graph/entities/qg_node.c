@@ -29,7 +29,7 @@ QGNode *QGNode_New(const char *alias) {
 	n->labelID = GRAPH_NO_LABEL;
 	n->incoming_edges = array_new(QGEdge *, 0);
 	n->outgoing_edges = array_new(QGEdge *, 0);
-	n->customized_filter = GrB_NULL;
+	n->customized_filter = NULL;
 	return n;
 }
 
@@ -82,7 +82,7 @@ QGNode *QGNode_Clone(const QGNode *orig) {
 	// Don't save edges when duplicating a node
 	n->incoming_edges = array_new(QGEdge *, 0);
 	n->outgoing_edges = array_new(QGEdge *, 0);
-	n->customized_filter = GrB_NULL;
+	n->customized_filter = NULL; //could be wrong
 
 	return n;
 }
