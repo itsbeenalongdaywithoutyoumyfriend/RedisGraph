@@ -582,20 +582,7 @@ NodeID * get_filter_mql
 }
 
 
-// void radixsort_mql(NodeID *to_be_sorted)
-// {
-// 	int origin_len=array_len(to_be_sorted);
-// 	NodeID *radix[10];
-// 	for(int i=0;i<10;++i)radix[i]=array_new(NodeID,origin_len);
-// 	int cnt=0;
-// 	while(true)
-// 	{
-// 		for(int i=0;i<origin_len;++i)
-// 		{
 
-// 		}
-// 	}
-// }
 void swap_mql(NodeID* a, NodeID* b)
 {
     NodeID temp = *b;
