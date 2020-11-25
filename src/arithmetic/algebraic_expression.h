@@ -41,7 +41,7 @@ struct AlgebraicExpression {
 			const char *dest;       // Alias given to operand's columns (destination node).
 			const char *edge;       // Alias given to operand (edge).
 			const char *label;      // Label attached to matrix.
-			GrB_Matrix* customized_filter_pointer;
+			NodeID** customized_filter_pointer;
 		} operand;
 		struct {
 			AL_EXP_OP op;                   // Operation: `*`,`+`,`transpose`
