@@ -491,29 +491,43 @@ NodeID * get_filter_on_cycle_mql
 	bool *transpositions
 )
 {
+	const int recordsCap=16;
 	GraphContext *gc = QueryCtx_GetGraphCtx();
 	AlgebraicExpression *exp=_AlgebraicExpression_FromPath_mql(path,transpositions);
-	GrB_Matrix res= GrB_NULL;
 	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
 	NodeID *filters = array_new(NodeID,required_dim);
-	GrB_Matrix_new(&res, GrB_BOOL, required_dim, required_dim);
+	GrB_Matrix res= GrB_NULL;
+	GrB_Matrix recordsBulk=GrB_NULL;
+	GrB_Matrix_new(&recordsBulk, GrB_BOOL, recordsCap, required_dim);
+	GrB_Matrix_new(&res, GrB_BOOL, recordsCap, required_dim);
+	AlgebraicExpression_MultiplyToTheLeft(&exp, recordsBulk);
 	AlgebraicExpression_Optimize(&exp);
 	assert(exp);
-	if(exp->type == AL_OPERATION){
-		AlgebraicExpression_Eval(exp, res);
-	}
-	else
+	assert(exp->type == AL_OPERATION);
+	NodeID* original_filter=path[0]->src->customized_filter;
+	if(original_filter==NULL)
 	{
-		assert(exp->type == AL_OPERAND);
-		res = exp->operand.matrix;
+		original_filter=array_new(NodeID,required_dim);
+		for(int i=0;i<required_dim;++i)
+			original_filter=array_append(original_filter,i);
 	}
-
+	int original_filter_len=array_len(original_filter);
+	for(int i=0;i<original_filter_len;i+=recordsCap)
+	{
+		for(int j=0;j<recordsCap&&i+j<original_filter_len;++j)
+		{
+			GrB_Matrix_setElement_BOOL(recordsBulk, true, j, original_filter[i+j]);
+		}
+		AlgebraicExpression_Eval(exp, res);
 		bool v;
-	for(int i=0;i<required_dim;++i)
-		if(GrB_Matrix_extractElement_BOOL(&v,res,i,i)==GrB_SUCCESS)
-			filters= array_append(filters,i);
-	
+		for(int j=0;j<recordsCap&&i+j<original_filter_len;++j)
+		{
+			if(GrB_Matrix_extractElement_BOOL(&v,res,j,original_filter[i+j])==GrB_SUCCESS)
+				filters= array_append(filters,original_filter[i+j]);
+		}
+	}
 	GrB_Matrix_free(&res);
+	GrB_Matrix_free(&recordsBulk);
 	FILE *fp;
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
 	fprintf(fp,"getfiltercycle %d\n",array_len(filters));
@@ -620,19 +634,19 @@ void fill_customized_filter_mql
 	}
 	else
 	{
-		NodeID *origin_filter_array=*to_be_filled;
-		uint origin_filter_len = array_len(origin_filter_array);
+		NodeID *original_filter_array=*to_be_filled;
+		uint original_filter_len = array_len(original_filter_array);
 		NodeID *new_filter_array = array_new(NodeID, required_dim);
-		for(uint i=0,j=0;j<origin_filter_len;++j)
+		for(uint i=0,j=0;j<original_filter_len;++j)
 		{
-			while(i<filter_len&&filter_array[i]<origin_filter_array[j])++i;
-			if(i<filter_len&&filter_array[i]==origin_filter_array[j])
+			while(i<filter_len&&filter_array[i]<original_filter_array[j])++i;
+			if(i<filter_len&&filter_array[i]==original_filter_array[j])
 			{
 				new_filter_array = array_append(new_filter_array,filter_array[i]);
 			}
 		}
 		*to_be_filled = new_filter_array;
-		array_free(origin_filter_array);
+		array_free(original_filter_array);
 		array_free(filter_array);
 		cnt=array_len(new_filter_array);
 	}
