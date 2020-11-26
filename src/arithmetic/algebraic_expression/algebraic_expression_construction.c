@@ -536,6 +536,61 @@ NodeID * get_filter_on_cycle_mql
 	return filters;
 }
 
+NodeID * get_filter_from_starters_mql
+(
+	QGEdge **path,
+	bool *transpositions,
+	NodeID *starters
+)
+{
+	const int recordsCap=16;
+	GraphContext *gc = QueryCtx_GetGraphCtx();
+	AlgebraicExpression *exp=_AlgebraicExpression_FromPath_mql(path,transpositions);
+	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
+	NodeID *filters = array_new(NodeID,required_dim);
+	GrB_Matrix res= GrB_NULL;
+	GrB_Matrix recordsBulk=GrB_NULL;
+	GrB_Matrix_new(&recordsBulk, GrB_BOOL, recordsCap, required_dim);
+	GrB_Matrix_new(&res, GrB_BOOL, recordsCap, required_dim);
+	AlgebraicExpression_MultiplyToTheLeft(&exp, recordsBulk);
+	AlgebraicExpression_Optimize(&exp);
+	assert(exp);
+	assert(exp->type == AL_OPERATION);
+	int starters_len=array_len(starters);
+	for(int i=0;i<starters_len;i+=recordsCap)
+	{
+		for(int j=0;j<recordsCap&&i+j<starters_len;++j)
+		{
+			GrB_Matrix_setElement_BOOL(recordsBulk, true, j, starters[i+j]);
+		}
+		AlgebraicExpression_Eval(exp, res);
+		GrB_Matrix_clear(recordsBulk);
+		bool v;
+		GxB_MatrixTupleIter *iter=NULL;
+		GxB_MatrixTupleIter_new(&iter, res);
+		NodeID src_id = INVALID_ENTITY_ID;
+		NodeID dest_id = INVALID_ENTITY_ID;
+		bool depleted = false;
+		while(true)
+		{
+			if(iter) GxB_MatrixTupleIter_next(iter, &src_id, &dest_id, &depleted);
+			if(depleted) break;
+			filters= array_append(filters,dest_id);
+		}
+	}
+	GrB_Matrix_free(&res);
+	GrB_Matrix_free(&recordsBulk);
+	int filters_len=array_len(filters);
+	heap_sort_mql(filters,filters_len);
+	NodeID *return_filters = array_new(NodeID,required_dim);
+	for(int i=0;i<filters_len;++i)
+	{
+		if(i==filters_len-1||filters[i]!=filters[i+1])
+			return_filters=array_append(return_filters,filters[i]);
+	}
+	array_free(filters);
+	return return_filters;
+}
 
 NodeID * get_filter_mql
 (
@@ -786,7 +841,7 @@ void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***pat
 		QGEdge *e = part_path[i];
 		if(part_transpositions[i]) QGEdge_Reverse(e);
 	}
-
+	int last_filter_index=-1;
 	for(uint i=0;i<part_path_len;++i)
 	{
 		QGEdge **rotated_path = array_new(QGEdge *, part_path_len);
@@ -797,8 +852,23 @@ void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***pat
 			rotated_transpositions[j]=part_transpositions[(j+i)%part_path_len];
 		}
 		if(part_path_len>1&&!_should_divide_expression(rotated_path,0,qg))continue;
+		if(rotated_path[0]->src->customized_filter==NULL&&last_filter_index>0)
+		{
+			QGEdge **starters_path = array_new(QGEdge *, part_path_len);
+			bool starters_transpositions[part_path_len];
+			for(int j=0;last_filter_index+j<i;++j)
+			{
+				starters_path=array_append(starters_path,part_path[last_filter_index+j]);
+				starters_transpositions[j]=part_transpositions[last_filter_index+j];
+			}
+			NodeID *filters = get_filter_from_starters_mql(starters_path,starters_transpositions,part_path[last_filter_index]->src->customized_filter);
+			fill_customized_filter_mql(&part_path[i]->src->customized_filter,filters);
+			array_free(starters_path);
+		}
 		NodeID *filters = get_filter_on_cycle_mql(rotated_path,rotated_transpositions);
 		fill_customized_filter_mql(&part_path[i]->src->customized_filter,filters);
+		last_filter_index=i;
+		array_free(rotated_path);
 	}
 
 	//undo  transpose.
