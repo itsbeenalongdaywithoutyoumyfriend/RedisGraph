@@ -519,6 +519,7 @@ NodeID * get_filter_on_cycle_mql
 			GrB_Matrix_setElement_BOOL(recordsBulk, true, j, original_filter[i+j]);
 		}
 		AlgebraicExpression_Eval(exp, res);
+		GrB_Matrix_clear(recordsBulk);
 		bool v;
 		for(int j=0;j<recordsCap&&i+j<original_filter_len;++j)
 		{
