@@ -796,6 +796,7 @@ void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***pat
 			rotated_path=array_append(rotated_path,part_path[(j+i)%part_path_len]);
 			rotated_transpositions[j]=part_transpositions[(j+i)%part_path_len];
 		}
+		if(part_path_len>1&&!_should_divide_expression(rotated_path,0,qg))continue;
 		NodeID *filters = get_filter_on_cycle_mql(rotated_path,rotated_transpositions);
 		fill_customized_filter_mql(&part_path[i]->src->customized_filter,filters);
 	}
