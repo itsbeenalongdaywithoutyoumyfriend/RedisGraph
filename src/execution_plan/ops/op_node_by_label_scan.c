@@ -30,6 +30,7 @@ OpBase *NewNodeByLabelScanOp(const ExecutionPlan *plan, NodeScanCtx n) {
 	op->n = n;
 	op->iter = NULL;
 	op->child_record = NULL;
+	op->filter_results = NULL;
 	// Defaults to [0...UINT64_MAX].
 	op->id_range = UnsignedRange_New();
 
@@ -151,6 +152,14 @@ static Record NodeByLabelScanConsumeFromChild(OpBase *opBase) {
 static Record NodeByLabelScanConsume(OpBase *opBase) {
 	NodeByLabelScan *op = (NodeByLabelScan *)opBase;
 
+	if(op->filter_results!=NULL)
+	{
+		if(array_len(op->filter_results)<=0)return NULL;
+		GrB_Index nodeId=array_pop(op->filter_results);
+		Record r = OpBase_CreateRecord((OpBase *)op);
+		_UpdateRecord(op, r, nodeId);
+		return r;
+	}
 	GrB_Index nodeId;
 	bool depleted = false;
 	GxB_MatrixTupleIter_next(op->iter, NULL, &nodeId, &depleted);

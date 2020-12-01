@@ -60,6 +60,8 @@ static void _ExecutionPlan_ProcessQueryGraph(ExecutionPlan *plan, QueryGraph *qg
 				}
 				NodeScanCtx ctx = NODE_CTX_NEW(src->alias, src->label, src->labelID);
 				root = tail = NewNodeByLabelScanOp(plan, ctx);
+				((NodeByLabelScan*)root)->filter_results=src->customized_filter; 
+				// only apply our filter to labelscan for now
 			} else {
 				root = tail = NewAllNodeScanOp(plan, src->alias);
 			}
