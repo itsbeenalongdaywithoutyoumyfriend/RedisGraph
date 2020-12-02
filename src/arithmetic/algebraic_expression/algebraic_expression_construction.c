@@ -885,7 +885,7 @@ void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***pat
 // Construct algebraic expression form query graph.
 AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 (
-	const QueryGraph *qg    // Query-graph to process
+	QueryGraph *qg    // Query-graph to process
 ) {
 	assert(qg);
 
