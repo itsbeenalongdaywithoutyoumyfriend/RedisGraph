@@ -193,6 +193,7 @@ static OpBase *NodeByLabelScanClone(const ExecutionPlan *plan, const OpBase *opB
 	assert(opBase->type == OPType_NODE_BY_LABEL_SCAN);
 	NodeByLabelScan *op = (NodeByLabelScan *)opBase;
 	OpBase *clone = NewNodeByLabelScanOp(plan, op->n);
+	((NodeByLabelScan*)clone)->filter_results=op->filter_results;
 	return clone;
 }
 
