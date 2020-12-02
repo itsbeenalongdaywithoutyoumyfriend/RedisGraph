@@ -51,6 +51,7 @@ static void _ExecutionPlan_ProcessQueryGraph(ExecutionPlan *plan, QueryGraph *qg
 
 			/* Create the SCAN operation that will be the tail of the traversal chain. */
 			QGNode *src = QueryGraph_GetNodeByAlias(qg, AlgebraicExpression_Source(exps[0]));
+			QGNode *mysrc = QueryGraph_GetNodeByAlias(cc, AlgebraicExpression_Source(exps[0]));
 			if(src->label) {
 				/* Resolve source node by performing label scan,
 				 * in which case if the first algebraic expression operand
@@ -60,7 +61,7 @@ static void _ExecutionPlan_ProcessQueryGraph(ExecutionPlan *plan, QueryGraph *qg
 				}
 				NodeScanCtx ctx = NODE_CTX_NEW(src->alias, src->label, src->labelID);
 				root = tail = NewNodeByLabelScanOp(plan, ctx);
-				((NodeByLabelScan*)root)->filter_results=src->customized_filter; 
+				((NodeByLabelScan*)root)->filter_results=mysrc->customized_filter; 
 				// only apply our filter to labelscan for now
 			} else {
 				root = tail = NewAllNodeScanOp(plan, src->alias);
