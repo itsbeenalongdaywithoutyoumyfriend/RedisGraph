@@ -1,6 +1,7 @@
 #include "mytimer.h"
 #include "../execution_plan/ops/op.h"
 #include "../execution_plan/ops/op_conditional_traverse.h"
+#include "../algorithms/algorithms.h"
 #include <sys/time.h>
 Timer_mql** get_timers_mql()
 {
@@ -29,10 +30,11 @@ void timers_append_mql(OpBase *p)
     newrecord->time_sum=0;
     newrecord->record_sum=0;
     newrecord->p=p;
+	newrecord->distinct_records=array_new(uint64_t,0);
     timers=array_append(timers,*newrecord);
 }
 
-void add_to_timer_mql(OpBase *p,double addtime,int addrecord)
+void add_to_timer_mql(OpBase *p,double addtime,int addrecord,int adddistinctrecord)
 {
 	Timer_mql* timers = *get_timers_mql();
 	int len=array_len(timers);
@@ -43,6 +45,7 @@ void add_to_timer_mql(OpBase *p,double addtime,int addrecord)
 		{
 			timers[i].time_sum+=addtime;
             timers[i].record_sum+=addrecord;
+			if(adddistinctrecord>=0)timers[i].distinct_records=array_append(timers[i].distinct_records,adddistinctrecord);
 			ifexist=1;
 			break;
 		}
@@ -59,11 +62,17 @@ void timers_output_CondTraverse_mql()
     for(int i=0;i<len;++i)
 	{
         CondTraverse *op = (CondTraverse *)timers[i].p;
-        fprintf(fp,"%d -> %d CondTraverse time_used:%lfms,record_scanned:%d\n",
+		int l=array_len(timers[i].distinct_records);
+		heap_sort_mql(timers[i].distinct_records,l);
+		int cnt=l>0?1:0;
+		for(int j=1;j<l;++j)if(timers[i].distinct_records[j]!=timers[i].distinct_records[j-1])++cnt;
+
+        fprintf(fp,"%d -> %d CondTraverse time_used:%lfms,record_scanned:%d,distinct:%d\n",
             op->srcNodeIdx,
             op->destNodeIdx,
             timers[i].time_sum,
-            timers[i].record_sum
+            timers[i].record_sum,
+			cnt
             );
     }
     fclose(fp);
