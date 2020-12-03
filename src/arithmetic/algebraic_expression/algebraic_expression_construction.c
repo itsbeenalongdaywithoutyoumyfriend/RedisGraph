@@ -911,7 +911,13 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 	if(acyclic)
 	{
 		customized_filter_on_cycle_mql(g);
-		customized_filter_on_cycle_mql(qg);
+		int qgnode_len=array_len(qg->nodes);
+		for(int i=0;i<qgnode_len;++i)
+		{
+			if(g->nodes[i]->customized_filter!=NULL)
+				qg->nodes[i]->customized_filter=g->nodes[i]->customized_filter;
+		}
+		// customized_filter_on_cycle_mql(qg);
 	}
 	// As long as the query-graph isn't empty.
 	while(QueryGraph_EdgeCount(g) > 0) {
