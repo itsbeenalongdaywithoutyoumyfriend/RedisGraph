@@ -166,12 +166,12 @@ static Record CondTraverseConsume(OpBase *opBase) {
 		simpletimer_start_mql();
 		_traverse(op);
 		double time_used=simpletimer_end_mql();
-		add_to_timer_mql(opBase,time_used,0);
+		add_to_timer_mql(opBase,time_used,0,-1);
 
 	}
 	// bool elem;
 	// GrB_Matrix_extractElement_BOOL(&elem,op->M,src_id,dest_id);
-	add_to_timer_mql(opBase,0,1);
+	add_to_timer_mql(opBase,0,1,dest_id);
 	
 	/* Get node from current column. */
 	op->r = op->records[src_id];
