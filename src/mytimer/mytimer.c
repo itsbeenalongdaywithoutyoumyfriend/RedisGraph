@@ -59,9 +59,9 @@ void timers_output_CondTraverse_mql()
     for(int i=0;i<len;++i)
 	{
         CondTraverse *op = (CondTraverse *)timers[i].p;
-        fprintf(fp,"%s %s CondTraverse time_used:%lfms,record_scanned:%d\n",
-            op->ae->operand.src,
-            op->ae->operand.dest,
+        fprintf(fp,"%d -> %d CondTraverse time_used:%lfms,record_scanned:%d\n",
+            op->srcNodeIdx,
+            op->destNodeIdx,
             timers[i].time_sum,
             timers[i].record_sum
             );

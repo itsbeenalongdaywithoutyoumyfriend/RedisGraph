@@ -118,7 +118,7 @@ static OpResult CondTraverseInit(OpBase *opBase) {
  * Returns NULL once all traversals have been performed. */
 static Record CondTraverseConsume(OpBase *opBase) {
 
-	// timers_append_mql(opBase);
+	timers_append_mql(opBase);
 
 	CondTraverse *op = (CondTraverse *)opBase;
 	OpBase *child = op->op.children[0];
@@ -163,15 +163,15 @@ static Record CondTraverseConsume(OpBase *opBase) {
 		// No data.
 		if(op->recordCount == 0) return NULL;
 
-		// simpletimer_start_mql();
+		simpletimer_start_mql();
 		_traverse(op);
-		// double time_used=simpletimer_end_mql();
-		// add_to_timer_mql(opBase,time_used,0);
+		double time_used=simpletimer_end_mql();
+		add_to_timer_mql(opBase,time_used,0);
 
 	}
 	// bool elem;
 	// GrB_Matrix_extractElement_BOOL(&elem,op->M,src_id,dest_id);
-	// if(elem)add_to_timer_mql(opBase,0,1);
+	add_to_timer_mql(opBase,0,1);
 	
 	/* Get node from current column. */
 	op->r = op->records[src_id];
