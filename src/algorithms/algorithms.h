@@ -13,4 +13,5 @@
 #include "./detect_cycle.h"
 #include "./longest_path.h"
 #include "./heapsort.h"
+#include "./path_recorder.h"
 #endif

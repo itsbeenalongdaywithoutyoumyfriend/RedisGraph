@@ -794,6 +794,7 @@ void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***pat
 	if(transposeCount > (part_path_len - transposeCount)) {
 		_reversePath(part_path, part_path_len, part_transpositions);
 	}
+	if(add_to_pathrecorder_mql(part_path))return;
 	// Apply transpose.
 	for(uint i = 0; i < part_path_len; i++) {
 		QGEdge *e = part_path[i];
@@ -868,6 +869,7 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 	QueryGraph *g = QueryGraph_Clone(qg);
 	if(acyclic)
 	{
+		pathrecorder_init_mql();
 		customized_filter_on_cycle_mql(g);
 		int qgnode_len=array_len(qg->nodes);
 		for(int i=0;i<qgnode_len;++i)
