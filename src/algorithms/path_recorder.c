@@ -50,4 +50,5 @@ bool add_to_pathrecorder_mql(QGEdge **path)
     }
     if(ifexist)return true;
     pr->paths=array_append(pr->paths,p);
+    return false;
 }
