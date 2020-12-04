@@ -16,6 +16,11 @@ bool add_to_pathrecorder_mql(QGEdge **path)
     int plen=array_len(path);
     char** p=array_new(char*,plen);
     for(int i=0;i<plen;++i)p=array_append(p,path[i]->alias);
+    fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+    for(int i=0;i<plen;++i)
+	fprintf(fp,"%s ->",p[i]);
+    fprintf(fp,"\n");
+	fclose(fp);
     bool ifexist=0;
     PathRecorder* pr=get_pathrecorder_mql();
     int prlen=array_len(pr->paths);
