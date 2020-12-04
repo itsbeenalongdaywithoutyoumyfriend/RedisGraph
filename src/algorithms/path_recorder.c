@@ -11,7 +11,7 @@ void pathrecorder_init_mql()
     PathRecorder* p = get_pathrecorder_mql();
     p->paths=array_new(char**,0);
 }
-bool add_to_pathrecorder_mql(QGEdge **path);
+bool add_to_pathrecorder_mql(QGEdge **path)
 {
     int plen=array_len(path);
     char** p=array_new(char*,plen);
