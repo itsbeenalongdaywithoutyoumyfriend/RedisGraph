@@ -687,6 +687,7 @@ void customized_filter_mql
 	bool *transpositions,
 	const QueryGraph *qg
 ){
+	simpletimer_start_mql();
 	QGEdge *e = NULL;
 	GrB_Index nvals;
 	int pathLen = array_len(path);
