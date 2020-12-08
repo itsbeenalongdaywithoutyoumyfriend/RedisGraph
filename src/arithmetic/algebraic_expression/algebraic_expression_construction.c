@@ -909,7 +909,7 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 		bool transpositions[path_len];
 		_normalizePath(path, path_len, transpositions);
 
-		// customized_filter_mql(path,transpositions,qg);
+		customized_filter_mql(path,transpositions,qg);
 
 		QGEdge ***paths = _Intermediate_Paths(path, qg);
 		AlgebraicExpression **sub_exps = array_new(AlgebraicExpression *, 1);
