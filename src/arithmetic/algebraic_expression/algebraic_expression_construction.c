@@ -628,6 +628,10 @@ NodeID * get_filter_mql
 		if(src_or_dest)filters= array_append(filters,src_id);
 		else filters= array_append(filters,dest_id);
 	}
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	fprintf(fp,"get_filter_mql %d\n",array_len(filters));
+	fclose(fp);
 	return filters;
 }
 
