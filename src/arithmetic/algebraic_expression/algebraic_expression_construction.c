@@ -744,8 +744,8 @@ void customized_filter_mql
 	}
 	NodeID *src_filter=get_filter_mql(path,transpositions,1);
 	NodeID *dest_filter=get_filter_mql(path,transpositions,0);
-	src_filter=get_filter_mql(path,transpositions,1);
-	dest_filter=get_filter_mql(path,transpositions,0);
+	// src_filter=get_filter_mql(path,transpositions,1);
+	// dest_filter=get_filter_mql(path,transpositions,0);
 	uint dest_filter_len=array_len(dest_filter);
 	heap_sort_mql(dest_filter,dest_filter_len);
 
