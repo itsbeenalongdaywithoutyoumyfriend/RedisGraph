@@ -646,8 +646,8 @@ void fill_customized_filter_mql
 		NodeID *new_filter_array = array_new(NodeID, required_dim);
 		for(int i=0;i<filter_len;++i)
 		{
-			if(i>0&&filter_array[i]!=filter_array[i-1])
-				new_filter_array=array_append(new_filter_array,filter_array[i]);
+			if(i>0&&filter_array[i]==filter_array[i-1])continue;
+			new_filter_array=array_append(new_filter_array,filter_array[i]);
 		}
 		*to_be_filled = new_filter_array;
 		cnt=array_len(new_filter_array);
