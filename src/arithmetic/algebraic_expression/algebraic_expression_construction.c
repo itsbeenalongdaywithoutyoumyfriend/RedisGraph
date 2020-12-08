@@ -643,8 +643,15 @@ void fill_customized_filter_mql
 	int cnt=0;
 	if(*to_be_filled==NULL)
 	{
-		*to_be_filled = filter_array;
-		cnt=array_len(filter_array);
+		NodeID *new_filter_array = array_new(NodeID, required_dim);
+		for(int i=0;i<filter_len;++i)
+		{
+			if(i>0&&filter_array[i]!=filter_array[i-1])
+				new_filter_array=array_append(new_filter_array,filter_array[i]);
+		}
+		*to_be_filled = new_filter_array;
+		cnt=array_len(new_filter_array);
+		array_free(filter_array);
 	}
 	else
 	{
@@ -653,6 +660,7 @@ void fill_customized_filter_mql
 		NodeID *new_filter_array = array_new(NodeID, required_dim);
 		for(uint i=0,j=0;j<original_filter_len;++j)
 		{
+			if(j>0&&original_filter_array[j]==original_filter_array[j-1])continue;
 			while(i<filter_len&&filter_array[i]<original_filter_array[j])++i;
 			if(i<filter_len&&filter_array[i]==original_filter_array[j])
 			{
@@ -716,12 +724,11 @@ void customized_filter_mql
 			uint filters2_len=array_len(filters2);
 			heap_sort_mql(filters1,filters1_len);
 
-			fill_customized_filter_mql(&e->dest->customized_filter,filters1);
 			fill_customized_filter_mql(&e->dest->customized_filter,filters2);
+			fill_customized_filter_mql(&e->dest->customized_filter,filters1);
 			FILE *fp;
 			fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
-			GrB_Matrix_nvals(&nvals, e->dest->customized_filter);
-			fprintf(fp,"%s %llu\n",e->dest->alias,nvals);
+			fprintf(fp,"%s %llu\n",e->dest->alias,array_len(e->dest->customized_filter));
 			fclose(fp);
 
 			array_free(path1);
@@ -741,10 +748,8 @@ void customized_filter_mql
 
 	FILE *fp;
 	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
-	GrB_Matrix_nvals(&nvals, path[0]->src->customized_filter);
-	fprintf(fp,"%s %llu src\n",path[0]->src->alias,nvals);
-	GrB_Matrix_nvals(&nvals, path[pathLen-1]->dest->customized_filter);
-	fprintf(fp,"%s %llu dest\n",path[pathLen-1]->dest->alias,nvals);
+	fprintf(fp,"%s %llu src\n",path[0]->src->alias,array_len(path[0]->src->customized_filter));
+	fprintf(fp,"%s %llu dest\n",path[pathLen-1]->dest->alias,array_len(path[pathLen-1]->dest->customized_filter));
 
 	
 	double time_used=simpletimer_end_mql();
