@@ -967,7 +967,12 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 			// Add constructed expression to return value.
 			exps = array_append(exps, exp);
 		}
-
+		int qgnode_len=array_len(qg->nodes);
+		for(int i=0;i<qgnode_len;++i)
+		{
+			if(g->nodes[i]->customized_filter!=NULL)
+				qg->nodes[i]->customized_filter=g->nodes[i]->customized_filter;
+		}
 		// Remove path from graph.
 		_RemovePathFromGraph(g, path);
 
