@@ -25,7 +25,9 @@ OpBase *NewAllNodeScanOp(const ExecutionPlan *plan, const char *alias) {
 	op->iter = NULL;
 	op->alias = alias;
 	op->child_record = NULL;
-
+	op->filter_results = NULL;
+	GraphContext *gc = QueryCtx_GetGraphCtx();
+	op->g = gc->g;
 	// Set our Op operations
 	OpBase_Init((OpBase *)op, OPType_ALL_NODE_SCAN, "All Node Scan", AllNodeScanInit,
 				AllNodeScanConsume, AllNodeScanReset, AllNodeScanToString, AllNodeScanClone, AllNodeScanFree, false,
@@ -79,6 +81,16 @@ static Record AllNodeScanConsumeFromChild(OpBase *opBase) {
 static Record AllNodeScanConsume(OpBase *opBase) {
 	AllNodeScan *op = (AllNodeScan *)opBase;
 
+	if(op->filter_results!=NULL)
+	{
+		if(array_len(op->filter_results)<=0)return NULL;
+		GrB_Index nodeId=array_pop(op->filter_results);
+		Record r = OpBase_CreateRecord((OpBase *)op);
+		Node n = GE_NEW_NODE();
+		Graph_GetNode(op->g, nodeId, &n);
+		Record_AddNode(r, op->nodeRecIdx, n);
+		return r;
+	}
 	Node n = GE_NEW_NODE();
 	n.entity = (Entity *)DataBlockIterator_Next(op->iter, &n.id);
 	if(n.entity == NULL) return NULL;
@@ -97,7 +109,9 @@ static OpResult AllNodeScanReset(OpBase *op) {
 
 static inline OpBase *AllNodeScanClone(const ExecutionPlan *plan, const OpBase *opBase) {
 	assert(opBase->type == OPType_ALL_NODE_SCAN);
-	return NewAllNodeScanOp(plan, ((AllNodeScan *)opBase)->alias);
+	OpBase *clone=NewAllNodeScanOp(plan, ((AllNodeScan *)opBase)->alias);
+	((AllNodeScan*)clone)->filter_results=((AllNodeScan*)opBase)->filter_results;
+	return clone;
 }
 
 static void AllNodeScanFree(OpBase *ctx) {

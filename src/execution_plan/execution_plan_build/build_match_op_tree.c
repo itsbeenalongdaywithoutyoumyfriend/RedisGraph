@@ -65,6 +65,7 @@ static void _ExecutionPlan_ProcessQueryGraph(ExecutionPlan *plan, QueryGraph *qg
 				// only apply our filter to labelscan for now
 			} else {
 				root = tail = NewAllNodeScanOp(plan, src->alias);
+				((AllNodeScan*)root)->filter_results=mysrc->customized_filter; 
 			}
 
 			/* For each expression, build the appropriate traversal operation. */
