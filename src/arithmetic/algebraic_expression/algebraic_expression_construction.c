@@ -860,6 +860,7 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 ) {
 	assert(qg);
 
+
 	/* Construct algebraic expression(s) from query-graph.
 	 * Trying to take advantage of long multiplications with as few
 	 * transpose as possible we'll transform paths crossing the graph
