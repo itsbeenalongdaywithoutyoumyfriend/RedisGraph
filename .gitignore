@@ -53,3 +53,5 @@ deps/GraphBLAS/Config/GraphBLAS.h.tmp
 *.xml
 *.iml
 *.d
+
+*.vscode/

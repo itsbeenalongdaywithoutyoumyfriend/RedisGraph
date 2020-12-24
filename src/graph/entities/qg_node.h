@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../../deps/GraphBLAS/Include/GraphBLAS.h"
+#include "graph_entity.h"
 /* Forward declaration of edge */
 struct QGEdge;
 
@@ -21,7 +22,7 @@ typedef struct {
 	bool highly_connected;     // Node degree > 2
 	struct QGEdge **outgoing_edges;   // Array of incoming edges (ME)<-(SRC)
 	struct QGEdge **incoming_edges;   // Array of outgoing edges (ME)->(DEST)
-	GrB_Matrix customized_filter; //new feature mql
+	NodeID* customized_filter; //new feature mql
 } QGNode;
 
 /* Creates a new node. */

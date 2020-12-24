@@ -18,3 +18,5 @@ QGEdge **DFS(
 	int level,          // Stop scanning once reached level.
     bool close_cycle    // Allow DFS scan to close a cycle.
 );
+
+void DFS_mql(QueryGraph *qg);

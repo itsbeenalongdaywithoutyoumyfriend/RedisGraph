@@ -21,6 +21,8 @@ typedef struct {
 	uint nodeRecIdx;
 	DataBlockIterator *iter;
 	Record child_record;        /* The Record this op acts on if it is not a tap. */
+	NodeID* filter_results;
+	Graph *g;
 } AllNodeScan;
 
 OpBase *NewAllNodeScanOp(const ExecutionPlan *plan, const char *alias);

@@ -216,6 +216,19 @@ static void _AlgebraicExpression_PopulateOperand(AlgebraicExpression *operand,
 
 	GrB_Matrix m = GrB_NULL;
 	const char *label = operand->operand.label;
+	NodeID **p=operand->operand.customized_filter_pointer;
+	if(p!=NULL)
+	{
+		NodeID *customized_filter_array=*p;
+		size_t required_dim = Graph_RequiredMatrixDim(gc->g);
+		GrB_Matrix_new(&m,GrB_BOOL,required_dim,required_dim);
+		int len=array_len(customized_filter_array);
+		for(int i=0;i<len;++i)
+		{
+			GrB_Matrix_setElement_BOOL(m,1,customized_filter_array[i],customized_filter_array[i]);
+		}
+	}
+	else
 	if(label == NULL) {
 		m = Graph_GetAdjacencyMatrix(gc->g);
 	} else if(operand->operand.diagonal) {

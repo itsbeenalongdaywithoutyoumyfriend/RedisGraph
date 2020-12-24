@@ -29,7 +29,7 @@ QGNode *QGNode_New(const char *alias) {
 	n->labelID = GRAPH_NO_LABEL;
 	n->incoming_edges = array_new(QGEdge *, 0);
 	n->outgoing_edges = array_new(QGEdge *, 0);
-	n->customized_filter = GrB_NULL;
+	n->customized_filter = NULL;
 	return n;
 }
 
@@ -82,7 +82,7 @@ QGNode *QGNode_Clone(const QGNode *orig) {
 	// Don't save edges when duplicating a node
 	n->incoming_edges = array_new(QGEdge *, 0);
 	n->outgoing_edges = array_new(QGEdge *, 0);
-	n->customized_filter = GrB_NULL;
+	n->customized_filter = NULL; //could be wrong
 
 	return n;
 }
@@ -99,16 +99,16 @@ int QGNode_ToString(const QGNode *n, char *buff, int buff_len) {
 }
 
 void QGNode_Free(QGNode *node) {
-	if(!node) return;
+	// if(!node) return;
 
-	if(node->outgoing_edges) array_free(node->outgoing_edges);
-	if(node->incoming_edges) array_free(node->incoming_edges);
+	// if(node->outgoing_edges) array_free(node->outgoing_edges);
+	// if(node->incoming_edges) array_free(node->incoming_edges);
 
-	if(node->customized_filter != GrB_NULL) {
-		GrB_Matrix_free(&node->customized_filter);
-		node->customized_filter = GrB_NULL;
-	}
+	// // if(node->customized_filter != GrB_NULL) {
+	// // 	GrB_Matrix_free(&node->customized_filter);
+	// 	node->customized_filter = GrB_NULL;
+	// // }
 
-	rm_free(node);
+	// rm_free(node);
 }
 

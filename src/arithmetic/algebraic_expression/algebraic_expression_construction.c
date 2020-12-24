@@ -8,6 +8,7 @@
 #include "../../util/arr.h"
 #include "../../query_ctx.h"
 #include "../../algorithms/algorithms.h"
+#include "../../mytimer/mytimer.h"
 
 /* Node with (income + outcome degree) > 2
  * is considered a highly connected node. */
@@ -181,6 +182,19 @@ static AlgebraicExpression *_AlgebraicExpression_OperandFromNode
 	bool transpose = false;
 	return AlgebraicExpression_NewOperand(GrB_NULL, diagonal, n->alias, n->alias, NULL, n->label);
 }
+
+static AlgebraicExpression *_AlgebraicExpression_OperandFromNodeFilter_mql
+(
+	QGNode *n,
+	NodeID **p
+) {
+	bool diagonal = true;
+	bool transpose = false;
+	AlgebraicExpression *ret=AlgebraicExpression_NewOperand(GrB_NULL, diagonal, n->alias, n->alias, NULL, n->label);
+	ret->operand.customized_filter_pointer=p;
+	return ret;
+}
+
 
 static AlgebraicExpression *_AlgebraicExpression_OperandFromEdge
 (
@@ -419,10 +433,10 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath
 		root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNode(e->dest));
 	}
 
-	if(e->dest->customized_filter!=GrB_NULL){
-		
+	if((e->dest->customized_filter)!=NULL){
+		root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNodeFilter_mql(e->dest,&(e->dest->customized_filter)));
 	}
-
+	
 	return root;
 }
 
@@ -462,18 +476,121 @@ static AlgebraicExpression *_AlgebraicExpression_FromPath_mql
 			// Connect via a multiplication node.
 			root = _AlgebraicExpression_MultiplyToTheRight(root, op);
 		}
-				// If last node on path has a label, multiply by label matrix.
-		if(e->dest->label) {
-			root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNode(e->dest));
-		}
 	}   // End of path traversal.
-	e=path[0];
-	if(e->src->label) {
-		root = _AlgebraicExpression_MultiplyToTheLeft(_AlgebraicExpression_OperandFromNode(e->src),root);
+
+	// If last node on path has a label, multiply by label matrix.
+	if(e->dest->label) {
+		root = _AlgebraicExpression_MultiplyToTheRight(root, _AlgebraicExpression_OperandFromNode(e->dest));
 	}
 	return root;
 }
 
+NodeID * get_filter_on_cycle_mql
+(
+	QGEdge **path,
+	bool *transpositions
+)
+{
+	const int recordsCap=16;
+	GraphContext *gc = QueryCtx_GetGraphCtx();
+	AlgebraicExpression *exp=_AlgebraicExpression_FromPath_mql(path,transpositions);
+	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
+	NodeID *filters = array_new(NodeID,required_dim);
+	GrB_Matrix res= GrB_NULL;
+	GrB_Matrix recordsBulk=GrB_NULL;
+	GrB_Matrix_new(&recordsBulk, GrB_BOOL, recordsCap, required_dim);
+	GrB_Matrix_new(&res, GrB_BOOL, recordsCap, required_dim);
+	AlgebraicExpression_MultiplyToTheLeft(&exp, recordsBulk);
+	AlgebraicExpression_Optimize(&exp);
+	assert(exp);
+	assert(exp->type == AL_OPERATION);
+	NodeID* original_filter=path[0]->src->customized_filter;
+	if(original_filter==NULL)
+	{
+		original_filter=array_new(NodeID,required_dim);
+		for(int i=0;i<required_dim;++i)
+			original_filter=array_append(original_filter,i);
+	}
+	int original_filter_len=array_len(original_filter);
+	for(int i=0;i<original_filter_len;i+=recordsCap)
+	{
+		for(int j=0;j<recordsCap&&i+j<original_filter_len;++j)
+		{
+			GrB_Matrix_setElement_BOOL(recordsBulk, true, j, original_filter[i+j]);
+		}
+		AlgebraicExpression_Eval(exp, res);
+		GrB_Matrix_clear(recordsBulk);
+		bool v;
+		for(int j=0;j<recordsCap&&i+j<original_filter_len;++j)
+		{
+			if(GrB_Matrix_extractElement_BOOL(&v,res,j,original_filter[i+j])==GrB_SUCCESS)
+				filters= array_append(filters,original_filter[i+j]);
+		}
+	}
+	GrB_Matrix_free(&res);
+	GrB_Matrix_free(&recordsBulk);
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	fprintf(fp,"getfiltercycle %d\n",array_len(filters));
+	fclose(fp);
+	return filters;
+}
+
+NodeID * get_filter_from_starters_mql
+(
+	QGEdge **path,
+	bool *transpositions,
+	NodeID *starters
+)
+{
+	const int recordsCap=16;
+	GraphContext *gc = QueryCtx_GetGraphCtx();
+	AlgebraicExpression *exp=_AlgebraicExpression_FromPath_mql(path,transpositions);
+	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
+	NodeID *filters = array_new(NodeID,required_dim);
+	GrB_Matrix res= GrB_NULL;
+	GrB_Matrix recordsBulk=GrB_NULL;
+	GrB_Matrix_new(&recordsBulk, GrB_BOOL, recordsCap, required_dim);
+	GrB_Matrix_new(&res, GrB_BOOL, recordsCap, required_dim);
+	AlgebraicExpression_MultiplyToTheLeft(&exp, recordsBulk);
+	AlgebraicExpression_Optimize(&exp);
+	assert(exp);
+	assert(exp->type == AL_OPERATION);
+	int starters_len=array_len(starters);
+	for(int i=0;i<starters_len;i+=recordsCap)
+	{
+		for(int j=0;j<recordsCap&&i+j<starters_len;++j)
+		{
+			GrB_Matrix_setElement_BOOL(recordsBulk, true, j, starters[i+j]);
+		}
+		AlgebraicExpression_Eval(exp, res);
+		GrB_Matrix_clear(recordsBulk);
+		bool v;
+		GxB_MatrixTupleIter *iter=NULL;
+		GxB_MatrixTupleIter_new(&iter, res);
+		NodeID src_id = INVALID_ENTITY_ID;
+		NodeID dest_id = INVALID_ENTITY_ID;
+		bool depleted = false;
+		while(true)
+		{
+			if(iter) GxB_MatrixTupleIter_next(iter, &src_id, &dest_id, &depleted);
+			if(depleted) break;
+			filters= array_append(filters,dest_id);
+		}
+	}
+	GrB_Matrix_free(&res);
+	GrB_Matrix_free(&recordsBulk);
+	int filters_len=array_len(filters);
+	heap_sort_mql(filters,filters_len);
+	NodeID *return_filters = array_new(NodeID,required_dim);
+	for(int i=0;i<filters_len;++i)
+	{
+		if(i==filters_len-1||filters[i]!=filters[i+1])
+			return_filters=array_append(return_filters,filters[i]);
+	}
+	array_free(filters);
+	return return_filters;
+}
 
 NodeID * get_filter_mql
 (
@@ -489,7 +606,16 @@ NodeID * get_filter_mql
 	NodeID *filters = array_new(NodeID,required_dim);
 	GrB_Matrix_new(&res, GrB_BOOL, required_dim, required_dim);
 	AlgebraicExpression_Optimize(&exp);
-	AlgebraicExpression_Eval(exp, res);
+	assert(exp);
+	if(exp->type == AL_OPERATION){
+		AlgebraicExpression_Eval(exp, res);
+	}
+	else
+	{
+		assert(exp->type == AL_OPERAND);
+		res = exp->operand.matrix;
+	}
+	
 	GxB_MatrixTupleIter *iter=NULL;
 	GxB_MatrixTupleIter_new(&iter, res);
 	NodeID src_id = INVALID_ENTITY_ID;
@@ -502,8 +628,61 @@ NodeID * get_filter_mql
 		if(src_or_dest)filters= array_append(filters,src_id);
 		else filters= array_append(filters,dest_id);
 	}
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	fprintf(fp,"get_filter_mql %d\n",array_len(filters));
+	fclose(fp);
 	return filters;
 }
+
+
+void fill_customized_filter_mql
+(
+	NodeID **to_be_filled,
+	NodeID *filter_array // must be sorted
+){//will free used filter_array and original to_be_filled
+	GraphContext *gc = QueryCtx_GetGraphCtx();
+	size_t required_dim = Graph_RequiredMatrixDim(gc->g);
+	uint filter_len=array_len(filter_array);
+	int cnt=0;
+	if(*to_be_filled==NULL)
+	{
+		NodeID *new_filter_array = array_new(NodeID, required_dim);
+		for(int i=0;i<filter_len;++i)
+		{
+			if(i>0&&filter_array[i]==filter_array[i-1])continue;
+			new_filter_array=array_append(new_filter_array,filter_array[i]);
+		}
+		*to_be_filled = new_filter_array;
+		cnt=array_len(new_filter_array);
+		array_free(filter_array);
+	}
+	else
+	{
+		NodeID *original_filter_array=*to_be_filled;
+		uint original_filter_len = array_len(original_filter_array);
+		NodeID *new_filter_array = array_new(NodeID, required_dim);
+		for(uint i=0,j=0;j<original_filter_len;++j)
+		{
+			if(j>0&&original_filter_array[j]==original_filter_array[j-1])continue;
+			while(i<filter_len&&filter_array[i]<original_filter_array[j])++i;
+			if(i<filter_len&&filter_array[i]==original_filter_array[j])
+			{
+				new_filter_array = array_append(new_filter_array,filter_array[i]);
+			}
+		}
+		*to_be_filled = new_filter_array;
+		array_free(original_filter_array);
+		array_free(filter_array);
+		cnt=array_len(new_filter_array);
+	}
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	fprintf(fp,"%d\n",cnt);
+	fclose(fp);
+}
+
+
 
 
 void customized_filter_mql
@@ -512,9 +691,11 @@ void customized_filter_mql
 	bool *transpositions,
 	const QueryGraph *qg
 ){
-	GraphContext *gc = QueryCtx_GetGraphCtx();
+	simpletimer_start_mql();
 	QGEdge *e = NULL;
+	GrB_Index nvals;
 	int pathLen = array_len(path);
+	
 	/* Scan path left to right,
 	 * construct intermidate paths by "breaking" on referenced entities. */
 	for(int i = 0; i < pathLen - 1; i++) {
@@ -536,39 +717,149 @@ void customized_filter_mql
 				e=path[j];
 				path2=array_append(path2, e);
 			}
+			e = path[i];
+
+			
+			
+
 			NodeID *filters1 = get_filter_mql(path1,transpositions,0);
-			// AlgebraicExpression *exp1=_AlgebraicExpression_FromPath_mql(path1,transpositions);
 			uint edge_converted = array_len(path1);
-			// AlgebraicExpression *exp2=_AlgebraicExpression_FromPath_mql(path2,transpositions + edge_converted);
 			NodeID *filters2 = get_filter_mql(path2,transpositions + edge_converted,1);
 			uint filters1_len=array_len(filters1);
 			uint filters2_len=array_len(filters2);
-			size_t required_dim = Graph_RequiredMatrixDim(gc->g);
-			GrB_Matrix_new(&e->dest->customized_filter, GrB_BOOL, required_dim, required_dim);
-			int outcount=0;
-			for(uint i=0,j=0;i<filters1_len;++i)
-			{
-				for(;j<filters2_len&&filters2[j]<filters1[i];++j);
-				if(j<filters2_len&&filters2[j]==filters1[i])	
-				{
-					GrB_Matrix_setElement_BOOL(e->dest->customized_filter,1,filters1[i],filters1[i]);
-					++outcount;
-				}
-			}
+			heap_sort_mql(filters1,filters1_len);
+
+			fill_customized_filter_mql(&e->dest->customized_filter,filters2);
+			fill_customized_filter_mql(&e->dest->customized_filter,filters1);
 			FILE *fp;
-			fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","w");
-			fprintf(fp,"%s %d\n",e->dest->alias,outcount);
+			fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+			fprintf(fp,"%s %llu\n",e->dest->alias,array_len(e->dest->customized_filter));
 			fclose(fp);
+
+			array_free(path1);
+			array_free(path2);
+			// array_free(filters1);
+			// array_free(filters2);
 		}
 	}
+	NodeID *src_filter=get_filter_mql(path,transpositions,1);
+	NodeID *dest_filter=get_filter_mql(path,transpositions,0);
+	// src_filter=get_filter_mql(path,transpositions,1);
+	// dest_filter=get_filter_mql(path,transpositions,0);
+	uint dest_filter_len=array_len(dest_filter);
+	heap_sort_mql(dest_filter,dest_filter_len);
+
+	fill_customized_filter_mql(&path[0]->src->customized_filter,src_filter);
+	fill_customized_filter_mql(&path[pathLen-1]->dest->customized_filter,dest_filter);
+
+
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	fprintf(fp,"%s %llu src\n",path[0]->src->alias,array_len(path[0]->src->customized_filter));
+	fprintf(fp,"%s %llu dest\n",path[pathLen-1]->dest->alias,array_len(path[pathLen-1]->dest->customized_filter));
+
+	
+	double time_used=simpletimer_end_mql();
+	fprintf(fp,"%lfms used in customized_filter_mql\n",time_used);
+
+
+	fclose(fp);
+	// array_free(src_filter);
+	// array_free(dest_filter);
+
+}
+void customized_filter_on_cycle_mql(QueryGraph *qg)
+{
+	DFS_mql(qg);
 }
 
+
+void build_customized_filter_on_cycle_mql(QGNode *n, int path_len, QGEdge ***path, bool *transpositions, QueryGraph *qg)
+{
+
+	simpletimer_start_mql();
+	FILE *fp;
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	assert(array_len(*path)==path_len);
+	uint firstPathIndex;
+	for(firstPathIndex=0;firstPathIndex<path_len;++firstPathIndex)
+	{
+		fprintf(fp,"%s->%s,",(*path)[firstPathIndex]->src->alias,(*path)[firstPathIndex]->dest->alias);
+	}fprintf(fp,"\n");
+	fclose(fp);
+	for(firstPathIndex=0;firstPathIndex<path_len;++firstPathIndex)
+	{
+		if(transpositions[firstPathIndex]==false&&(*path)[firstPathIndex]->src==n)break;
+		if(transpositions[firstPathIndex]==true&&(*path)[firstPathIndex]->dest==n)break;
+	}
+	assert(firstPathIndex<path_len);
+	uint part_path_len=path_len-firstPathIndex;
+	QGEdge **part_path = array_new(QGEdge *, part_path_len);
+	bool part_transpositions[part_path_len];
+	uint transposeCount = 0;
+	for(uint i=0,j=firstPathIndex;j<path_len;++j,++i)
+	{
+		part_path=array_append(part_path,(*path)[j]);
+		part_transpositions[i]=transpositions[j];
+		if(part_transpositions[i])++transposeCount;
+	}
+	if(transposeCount > (part_path_len - transposeCount)) {
+		_reversePath(part_path, part_path_len, part_transpositions);
+	}
+	if(add_to_pathrecorder_mql(part_path))return;
+	// Apply transpose.
+	for(uint i = 0; i < part_path_len; i++) {
+		QGEdge *e = part_path[i];
+		if(part_transpositions[i]) QGEdge_Reverse(e);
+	}
+	int last_filter_index=-1;
+	for(uint i=0;i<part_path_len;++i)
+	{
+		QGEdge **rotated_path = array_new(QGEdge *, part_path_len);
+		bool rotated_transpositions[part_path_len];
+		for(uint j=0;j<part_path_len;++j)
+		{
+			rotated_path=array_append(rotated_path,part_path[(j+i)%part_path_len]);
+			rotated_transpositions[j]=part_transpositions[(j+i)%part_path_len];
+		}
+		if(part_path_len>1&&!_referred_entity(rotated_path[0]->src->alias))continue;
+		//_should_divide_expression func not applicable
+		if(rotated_path[0]->src->customized_filter==NULL&&last_filter_index>0)
+		{
+			QGEdge **starters_path = array_new(QGEdge *, part_path_len);
+			bool starters_transpositions[part_path_len];
+			for(int j=0;last_filter_index+j<i;++j)
+			{
+				starters_path=array_append(starters_path,part_path[last_filter_index+j]);
+				starters_transpositions[j]=part_transpositions[last_filter_index+j];
+			}
+			NodeID *filters = get_filter_from_starters_mql(starters_path,starters_transpositions,part_path[last_filter_index]->src->customized_filter);
+			fill_customized_filter_mql(&part_path[i]->src->customized_filter,filters);
+			array_free(starters_path);
+		}
+		NodeID *filters = get_filter_on_cycle_mql(rotated_path,rotated_transpositions);
+		fill_customized_filter_mql(&part_path[i]->src->customized_filter,filters);
+		last_filter_index=i;
+		array_free(rotated_path);
+	}
+
+	//undo  transpose.
+	for(uint i = 0; i < part_path_len; i++) {
+		QGEdge *e = part_path[i];
+		if(part_transpositions[i]) QGEdge_Reverse(e);
+	}
+	fp=fopen("/home/qlma/customized-filter/outcount-redisgraph-mql","a+");
+	double time_used=simpletimer_end_mql();
+	fprintf(fp,"%lfms used in build_customized_filter_on_cycle_mql\n",time_used);
+	fclose(fp);
+}
 // Construct algebraic expression form query graph.
 AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 (
-	const QueryGraph *qg    // Query-graph to process
+	QueryGraph *qg    // Query-graph to process
 ) {
 	assert(qg);
+
 
 	/* Construct algebraic expression(s) from query-graph.
 	 * Trying to take advantage of long multiplications with as few
@@ -589,7 +880,18 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 
 	bool acyclic = IsAcyclicGraph(qg);
 	QueryGraph *g = QueryGraph_Clone(qg);
-
+	if(acyclic)
+	{
+		pathrecorder_init_mql();
+		customized_filter_on_cycle_mql(g);
+		int qgnode_len=array_len(qg->nodes);
+		for(int i=0;i<qgnode_len;++i)
+		{
+			if(g->nodes[i]->customized_filter!=NULL)
+				qg->nodes[i]->customized_filter=g->nodes[i]->customized_filter;
+		}
+		// customized_filter_on_cycle_mql(qg);
+	}
 	// As long as the query-graph isn't empty.
 	while(QueryGraph_EdgeCount(g) > 0) {
 		// Get leaf nodes at the deepest level.
@@ -615,7 +917,7 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 		bool transpositions[path_len];
 		_normalizePath(path, path_len, transpositions);
 
-		customized_filter_mql(path,transpositions,qg);
+		// customized_filter_mql(path,transpositions,qg);
 
 		QGEdge ***paths = _Intermediate_Paths(path, qg);
 		AlgebraicExpression **sub_exps = array_new(AlgebraicExpression *, 1);
@@ -628,6 +930,14 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 			edge_converted += array_len(paths[i]);
 			sub_exps = array_append(sub_exps, exp);
 
+			// if(i ==0 )
+			// {
+			// 	QGEdge **path=paths[0];
+			// 	QGEdge *e =path[0];
+			// 	if(e->src->customized_filter!=GrB_NULL){
+			// 		exp = _AlgebraicExpression_MultiplyToTheLeft(AlgebraicExpression_NewOperand(e->src->customized_filter, true, e->src->alias, e->src->alias, NULL, e->src->label),exp);
+			// 	}
+			// }
 			/* Remove exp[i] src label matrix (left most operand) as it's
 			 * being used by exp[i-1] dest label matrix.
 			 * (:A)-[:X]->(:B)-[:Y]->(:C)
@@ -658,7 +968,12 @@ AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 			// Add constructed expression to return value.
 			exps = array_append(exps, exp);
 		}
-
+		int qgnode_len=array_len(qg->nodes);
+		for(int i=0;i<qgnode_len;++i)
+		{
+			if(g->nodes[i]->customized_filter!=NULL)
+				qg->nodes[i]->customized_filter=g->nodes[i]->customized_filter;
+		}
 		// Remove path from graph.
 		_RemovePathFromGraph(g, path);
 

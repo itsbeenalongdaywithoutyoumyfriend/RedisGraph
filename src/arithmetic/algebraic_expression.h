@@ -41,6 +41,7 @@ struct AlgebraicExpression {
 			const char *dest;       // Alias given to operand's columns (destination node).
 			const char *edge;       // Alias given to operand (edge).
 			const char *label;      // Label attached to matrix.
+			NodeID** customized_filter_pointer;
 		} operand;
 		struct {
 			AL_EXP_OP op;                   // Operation: `*`,`+`,`transpose`
@@ -56,8 +57,19 @@ struct AlgebraicExpression {
 // Construct algebraic expression form query graph.
 AlgebraicExpression **AlgebraicExpression_FromQueryGraph
 (
-	const QueryGraph *qg    // Query-graph to process
+	QueryGraph *qg    // Query-graph to process
 );
+
+void build_customized_filter_on_cycle_mql
+(
+	QGNode *n,
+	int path_len,
+	QGEdge ***path,
+	bool *transpositions,
+	QueryGraph *qg
+);
+
+
 
 //------------------------------------------------------------------------------
 // AlgebraicExpression Node creation functions.
